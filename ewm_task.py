@@ -35,7 +35,6 @@ class EWMTasksETL:
             day=1
         ) - timedelta(days=1)
         filter_date = filter_date.replace(day=1)
-        filter_date = date(2025, 6, 1)
         filter_date_sap = filter_date.strftime("%Y%m%d")
 
         sql_get_tasks = f"""
