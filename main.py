@@ -29,24 +29,24 @@ def main() -> None:
 
         # # Process Agents
         agent_dim_processor = AgentDim(con_datawarehouse, con_hana, lookup)
-        schedule.every().day.at("01:05").do(agent_processor.run)
+        schedule.every().day.at("01:05").do(agent_dim_processor.run)
         # agent_dim_processor.run()
 
         customer_dim_processor = CustomerDim(con_datawarehouse, con_hana, lookup)
-        schedule.every().day.at("01:10").do(customer_processor.run)
+        schedule.every().day.at("01:10").do(customer_dim_processor.run)
         # customer_dim_processor.run()
 
         material_dim_processor = MaterialDim(con_datawarehouse, con_hana, lookup)
-        schedule.every().day.at("01:15").do(material_processor.run)
+        schedule.every().day.at("01:15").do(material_dim_processor.run)
         # material_dim_processor.run()
 
         # # Costing Fact        
-        costing_fact_processor = CostingFactETL(config.COSTING_PATH,con_datawarehouse, lookup)
+        costing_fact_processor = CostingFactETL(con_datawarehouse, lookup)
         schedule.every().day.at("02:00").do(costing_fact_processor.run)       
 
         # # EWM Tasks
-        ewm_tasks_processor = EWMTasksFactETL(con_datawarehouse, con_hana, lookup)
-        schedule.every().day.at("03:00").do(ewm_tasks_processor.run)
+        ewm_tasks_fact_processor = EWMTasksFactETL(con_datawarehouse, con_hana, lookup)
+        schedule.every().day.at("03:00").do(ewm_tasks_fact_processor.run)
         # # ewm_tasks_processor.run()        
 
         while True:
