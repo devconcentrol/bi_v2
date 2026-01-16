@@ -11,7 +11,7 @@ from utils.config import Config
 
 
 class CostingFactETL:
-    def __init__(self, engine: Engine, lookup: DimensionLookup):
+    def __init__(self, engine: Engine, lookup: DimensionLookup):        
         self._engine: Engine = engine
         self._lookup: DimensionLookup = lookup
         self._config = Config.get_instance()
@@ -19,11 +19,12 @@ class CostingFactETL:
         self.LOADED_DIR = "loaded"
 
     @error_handler
-    def run(self, directory: str):
+    def run(self):
         """
         Processes all files matching the pattern in the given directory,
         transforms them, uploads to DB, and moves them to 'loaded'.
         """
+        directory = self._config.COSTING_PATH
         pattern = os.path.join(directory, "*.xlsx")
         files = glob.glob(pattern)
 

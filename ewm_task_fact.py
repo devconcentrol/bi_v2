@@ -19,7 +19,7 @@ from sqlalchemy import (
 )
 
 
-class EWMTasksETL:
+class EWMTasksFactETL:
     def __init__(self, con_dw: Engine, con_sap: Engine, lookup: DimensionLookup):
         self._con_dw: Engine = con_dw
         self._con_sap: Engine = con_sap

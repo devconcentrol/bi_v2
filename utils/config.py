@@ -37,6 +37,8 @@ class Config:
         self.TABLE_AGENT_DIM = "AgentDim"
         self.TABLE_EWM_TASK_FACT = "EWMTaskFact"
         self.TABLE_ETL_INFO = "ETLInfo"
+        self.TABLE_CUSTOMER_DIM = "CustomerDim"
+        self.TABLE_MATERIAL_DIM = "MaterialsDim"
 
     @classmethod
     def get_instance(cls):

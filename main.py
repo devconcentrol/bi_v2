@@ -3,8 +3,10 @@ from utils.dimension_lookup import DimensionLookup
 from utils.logger import Logger
 from utils.config import Config
 from costing_fact import CostingFactETL
-from ewm_task import EWMTasksETL
-from agent import Agent
+from ewm_task_fact import EWMTasksFactETL
+from dimensions.agent_dim import AgentDim
+from dimensions.customer_dim import CustomerDim
+from dimensions.material_dim import MaterialDim
 import schedule
 import time
 
@@ -15,30 +17,37 @@ def main() -> None:
     try:
         config = Config.get_instance()
         
-        # Create database connections
+        # # Create database connections
         con_hana = create_engine(config.HANA_CONNECTION)
         con_datawarehouse = create_engine(config.DW_CONNECTION)
 
-        Logger().info("Starting ETL processes")
+        # Logger().info("Starting ETL processes")
 
         # Initialize dimension lookup
         lookup = DimensionLookup(con_datawarehouse)
         schedule.every().day.at("01:00").do(lookup.invalidate_caches)
 
-        # Process Agents
-        agent_processor = Agent(con_datawarehouse, con_hana)
-        schedule.every().day.at("03:00").do(agent_processor.run)
-        # agent_processor.process()
+        # # Process Agents
+        agent_dim_processor = AgentDim(con_datawarehouse, con_hana, lookup)
+        schedule.every().day.at("01:05").do(agent_processor.run)
+        # agent_dim_processor.run()
 
-        # Costing Fact
-        # logger.info("Processing costing facts...")
-        # process_costing = CostingFactETL(con_datawarehouse, lookup)
-        # process_costing.run(costing_path)
+        customer_dim_processor = CustomerDim(con_datawarehouse, con_hana, lookup)
+        schedule.every().day.at("01:10").do(customer_processor.run)
+        # customer_dim_processor.run()
 
-        # EWM Tasks
-        ewm_tasks_processor = EWMTasksETL(con_datawarehouse, con_hana, lookup)
+        material_dim_processor = MaterialDim(con_datawarehouse, con_hana, lookup)
+        schedule.every().day.at("01:15").do(material_processor.run)
+        # material_dim_processor.run()
+
+        # # Costing Fact        
+        costing_fact_processor = CostingFactETL(config.COSTING_PATH,con_datawarehouse, lookup)
+        schedule.every().day.at("02:00").do(costing_fact_processor.run)       
+
+        # # EWM Tasks
+        ewm_tasks_processor = EWMTasksFactETL(con_datawarehouse, con_hana, lookup)
         schedule.every().day.at("03:00").do(ewm_tasks_processor.run)
-        # ewm_tasks_processor.run()
+        # # ewm_tasks_processor.run()        
 
         while True:
             schedule.run_pending()

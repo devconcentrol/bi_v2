@@ -20,11 +20,11 @@ from sqlalchemy import (
 )
 
 
-class Agent:
-    def __init__(self, con_dw: Engine, con_sap: Engine):
+class AgentDim:
+    def __init__(self, con_dw: Engine, con_sap: Engine, lookup: DimensionLookup ):
         self._con_dw: Engine = con_dw
         self._con_sap: Engine = con_sap
-        self._lookup: DimensionLookup = DimensionLookup(con_dw)
+        self._lookup: DimensionLookup = lookup
         self._config = Config.get_instance()
 
     @error_handler
@@ -36,18 +36,28 @@ class Agent:
         yesterday = (date.today() - timedelta(days=1)).strftime("%Y%m%d")
         Logger().info(f"Processing agents for date: {yesterday}")
 
-        sql_get_agents = """
+        stmt_update_etl = text(
+            f"UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() WHERE ETL = 'process_agents'"
+        )
+        sql_get_agents = f"""
                             SELECT BPTYPE,
                                    AGENTCODE,
                                    AGENTNAME,
                                    MODDATE
                             FROM SAPSR3.ZCON_V_AGENTES
-                            WHERE MODDATE = :yesterday
+                            WHERE MODDATE = '{yesterday}'
                         """
-
+        
         results: pd.DataFrame = pd.read_sql(
             text(sql_get_agents), self._con_sap, params={"yesterday": yesterday}
         )
+
+        if results.empty:
+            Logger().info("No agents found for processing")
+            with self._con_dw.begin() as conn:
+                conn.execute(stmt_update_etl)
+            return
+        
         # normalize column names to lowercase to make downstream accesses predictable
         results.columns = results.columns.str.lower()
 
@@ -71,40 +81,32 @@ class Agent:
             .where(agent_table.c.AgentId == bindparam("b_AgentId"))
             .values(AgentName=bindparam("b_AgentName"))
         )
-
-        stmt_update_etl = text(
-            f"UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() WHERE ETL = 'process_agents'"
-        )
-
+        
         with self._con_dw.begin() as conn:
-            if not results.empty:
-                agent_map = self._lookup.get_agent_map()
+            agent_map = self._lookup.get_agent_map()
 
-                # Add search key for lookups
-                results["search_key"] = results["bptype"] + results["agentcode"]
-                results["AgentId"] = results["search_key"].map(agent_map)
+            # Add search key for lookups
+            results["search_key"] = results["bptype"] + results["agentcode"]
+            results["AgentId"] = results["search_key"].map(agent_map)
 
-                # Split into updates and inserts
-                updates_df = results[results["AgentId"].notna()]
-                inserts_df = results[results["AgentId"].isna()]
+            # Split into updates and inserts
+            updates_df = results[results["AgentId"].notna()]
+            inserts_df = results[results["AgentId"].isna()]
 
-                if not updates_df.empty:
-                    update_data = updates_df.rename(
-                        columns={"agentname": "b_AgentName", "AgentId": "b_AgentId"}
-                    )[["b_AgentName", "b_AgentId"]].to_dict(orient="records")
-                    conn.execute(stmt_update_agents, update_data)  # type: ignore
+            if not updates_df.empty:
+                update_data = updates_df.rename(
+                    columns={"agentname": "b_AgentName", "AgentId": "b_AgentId"}
+                )[["b_AgentName", "b_AgentId"]].to_dict(orient="records")
+                conn.execute(stmt_update_agents, update_data)  # type: ignore
 
-                if not inserts_df.empty:
-                    insert_data = inserts_df.rename(
-                        columns={
-                            "agentcode": "AgentCode",
-                            "bptype": "AgentType",
-                            "agentname": "AgentName",
-                        }
-                    )[["AgentCode", "AgentType", "AgentName"]].to_dict(orient="records")
-                    conn.execute(stmt_insert_agents, insert_data)  # type: ignore
-            else:
-                Logger().info("No agents found for processing")
-
-            # Always update ETL Info regardless of results
+            if not inserts_df.empty:
+                insert_data = inserts_df.rename(
+                    columns={
+                        "agentcode": "AgentCode",
+                        "bptype": "AgentType",
+                        "agentname": "AgentName",
+                    }
+                )[["AgentCode", "AgentType", "AgentName"]].to_dict(orient="records")
+                conn.execute(stmt_insert_agents, insert_data)  # type: ignore
+            
             conn.execute(stmt_update_etl)
