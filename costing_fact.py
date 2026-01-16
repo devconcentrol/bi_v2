@@ -2,21 +2,20 @@ import os
 import shutil
 import glob
 import pandas as pd
-from sqlalchemy import Engine
+from sqlalchemy import Engine, text
 from utils.dimension_lookup import DimensionLookup
 from utils.logger import Logger
 from utils.date_utils import parse_date
 from utils.error_handler import error_handler
+from utils.config import Config
 
 
 class CostingFactETL:
     def __init__(self, engine: Engine, lookup: DimensionLookup):
         self._engine: Engine = engine
         self._lookup: DimensionLookup = lookup
+        self._config = Config.get_instance()
 
-        self.DEFAULT_CHANNEL = "10"
-        self.DEFAULT_DIVISION = "10"
-        self.TABLE_NAME = "CostingFact"
         self.LOADED_DIR = "loaded"
 
     @error_handler
@@ -34,7 +33,7 @@ class CostingFactETL:
 
         os.makedirs(self.LOADED_DIR, exist_ok=True)
 
-        # Initialize maps once for efficiency if possible, or inside loop if they change
+        # Initialize maps once for efficiency
         customer_map = self._lookup.get_customer_map()
         material_map = self._lookup.get_material_map()
 
@@ -68,8 +67,8 @@ class CostingFactETL:
             # Map Customers
             df["CustKey"] = (
                 df["SalesOrganization"].astype(str)
-                + self.DEFAULT_CHANNEL
-                + self.DEFAULT_DIVISION
+                + self._config.DEFAULT_CHANNEL
+                + self._config.DEFAULT_DIVISION
                 + df["CustomerCode"].astype(str)
             )
             df["CustId"] = df["CustKey"].map(customer_map)
@@ -109,7 +108,7 @@ class CostingFactETL:
                 f"Uploading {len(df_upload)} rows from {os.path.basename(file_path)}..."
             )
             df_upload.to_sql(
-                self.TABLE_NAME, self._engine, if_exists="append", index=False
+                self._config.TABLE_COSTING_FACT, self._engine, if_exists="append", index=False
             )
 
             # 4. Move to loaded
@@ -118,3 +117,10 @@ class CostingFactETL:
                 os.remove(dest_path)
             shutil.move(file_path, dest_path)
             Logger().info(f"Processed and moved: {os.path.basename(file_path)}")
+
+        # Update ETLInfo
+        stmt_update_etl = text(
+            f"UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() WHERE ETL = 'process_costing'"
+        )
+        with self._engine.begin() as conn:
+            conn.execute(stmt_update_etl)            

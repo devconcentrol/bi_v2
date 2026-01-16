@@ -3,33 +3,33 @@ import pandas as pd
 
 def parse_date(date_val):
     """
-    Parses a date value and returns it in dd/mm/yyyy format.
+    Parses a date value and returns it in YYYYMMDD format.
     Handles strings (YYYYMMDD, DD/MM/YYYY), datetime objects, and SAP '00000000'/null values.
     """
-    if pd.isna(date_val) or date_val == "00000000" or date_val == "" or date_val == 0:
+    if pd.isna(date_val) or date_val in ("00000000", "", 0, "0"):
         return None
         
-    dt = None
     if isinstance(date_val, (datetime, pd.Timestamp)):
-        dt = date_val
-    else:
-        date_str = str(date_val).strip()
-        # Try YYYYMMDD (SAP)
-        try:
-            dt = datetime.strptime(date_str, "%Y%m%d")
-        except (ValueError, TypeError):
-            # Try DD/MM/YYYY
-            try:
-                dt = datetime.strptime(date_str, "%d/%m/%Y")
-            except (ValueError, TypeError):
-                # Try letting pandas handle other formats
-                try:
-                    dt = pd.to_datetime(date_str, dayfirst=True)
-                    if pd.isna(dt):
-                        dt = None
-                except (ValueError, TypeError):
-                    dt = None
+        return date_val.strftime("%Y%m%d")
+
+    date_str = str(date_val).strip()
     
-    if dt:
+    # Fast paths for common formats
+    if len(date_str) == 8 and date_str.isdigit():
+        try:
+            return datetime.strptime(date_str, "%Y%m%d").strftime("%Y%m%d")
+        except ValueError:
+            pass
+            
+    if "/" in date_str:
+        try:
+            return datetime.strptime(date_str, "%d/%m/%Y").strftime("%Y%m%d")
+        except ValueError:
+            pass
+            
+    # Fallback to pandas
+    dt = pd.to_datetime(date_str, dayfirst=True, errors='coerce')
+    if pd.notna(dt):
         return dt.strftime("%Y%m%d")
+        
     return None

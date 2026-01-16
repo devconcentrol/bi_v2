@@ -4,6 +4,7 @@ from zoneinfo import ZoneInfo
 from utils.dimension_lookup import DimensionLookup
 from utils.error_handler import error_handler
 from utils.logger import Logger
+from utils.config import Config
 from sqlalchemy import (
     MetaData,
     Table,
@@ -23,7 +24,7 @@ class EWMTasksETL:
         self._con_dw: Engine = con_dw
         self._con_sap: Engine = con_sap
         self._lookup: DimensionLookup = lookup
-        self.TABLE_NAME = "EWMTaskFact"
+        self._config = Config.get_instance()
 
     @error_handler
     def run(self) -> None:
@@ -153,7 +154,7 @@ class EWMTasksETL:
             # Define the table for insertion
             metadata: MetaData = MetaData()
             ewm_tasks_table: Table = Table(
-                self.TABLE_NAME,
+                self._config.TABLE_EWM_TASK_FACT,
                 metadata,
                 Column("OrderNum", String(15)),
                 Column("TaskNum", String(15)),
@@ -184,12 +185,12 @@ class EWMTasksETL:
             )
 
         stmt_delete = text(f"""
-                        DELETE FROM EWMTaskFact
+                        DELETE FROM {self._config.TABLE_EWM_TASK_FACT}
                         WHERE CreatedDate >= '{filter_date.strftime("%Y-%m-%d")}'
                         """)
 
         stmt_update_etl = text(
-            "UPDATE ETLInfo SET ProcessDate = GETDATE() WHERE ETL = 'process_ewm_tasks'"
+            f"UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() WHERE ETL = 'process_ewm_tasks'"
         )
         with self._con_dw.begin() as conn:
             if len(insert_data) > 0:

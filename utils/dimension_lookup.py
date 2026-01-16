@@ -1,4 +1,4 @@
-import logging
+from utils.logger import Logger
 import pandas as pd
 
 from sqlalchemy import (
@@ -24,17 +24,17 @@ class DimensionLookup:
         self._agent_map = None
 
     def _load_customers(self) -> pd.DataFrame:
-        logging.info("Cache --> Loading customers from DB")
+        Logger().info("Cache --> Loading customers from DB")
         customer_query = """SELECT CustId, CustCode, SalesOrganization, Channel, Division FROM CustomerDim"""
         return pd.read_sql(customer_query, self._con_dw)
 
     def _load_materials(self) -> pd.DataFrame:
-        logging.info("Cache --> Loading materials from DB")
+        Logger().info("Cache --> Loading materials from DB")
         material_query = "SELECT MaterialCode, MaterialId FROM MaterialsDim"
         return pd.read_sql(material_query, self._con_dw)
 
     def _load_agents(self) -> pd.DataFrame:
-        logging.info("Cache --> Loading agents from DB")
+        Logger().info("Cache --> Loading agents from DB")
         agent_query = "SELECT AgentId, AgentType, AgentCode FROM AgentDim"
         return pd.read_sql(agent_query, self._con_dw)
 

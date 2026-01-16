@@ -1,11 +1,10 @@
 from sqlalchemy import create_engine, Engine
 from utils.dimension_lookup import DimensionLookup
 from utils.logger import Logger
+from utils.config import Config
 from costing_fact import CostingFactETL
 from ewm_task import EWMTasksETL
 from agent import Agent
-import os
-from dotenv import load_dotenv
 import schedule
 import time
 
@@ -14,25 +13,11 @@ def main() -> None:
     con_hana: Engine | None = None
     con_datawarehouse: Engine | None = None
     try:
-        load_dotenv(".env")
-        hana_connection = os.getenv("HANA_CONNECTION")
-        if not hana_connection:
-            raise ValueError(
-                "HANA connection string is not set in the environment variables."
-            )
-        datawarehouse_connection = os.getenv("DW_CONNECTION")
-        if not datawarehouse_connection:
-            raise ValueError(
-                "Data Warehouse connection string is not set in the environment variables."
-            )
-
-        costing_path = os.getenv("COSTING_PATH")
-        if not costing_path:
-            raise ValueError("COSTING_PATH is not set in the environment variableqs.")
-
+        config = Config.get_instance()
+        
         # Create database connections
-        con_hana = create_engine(hana_connection)
-        con_datawarehouse = create_engine(datawarehouse_connection)
+        con_hana = create_engine(config.HANA_CONNECTION)
+        con_datawarehouse = create_engine(config.DW_CONNECTION)
 
         Logger().info("Starting ETL processes")
 
@@ -58,8 +43,10 @@ def main() -> None:
         while True:
             schedule.run_pending()
             time.sleep(10)
+    except Exception as e:
+        Logger().error(f"Critical error in main: {e}")
     finally:
-        Logger().info("Processing EWM tasks...")
+        Logger().info("Closing database connections...")
         if con_hana is not None:
             con_hana.dispose()
         if con_datawarehouse is not None:

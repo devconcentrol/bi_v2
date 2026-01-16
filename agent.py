@@ -3,6 +3,7 @@ from datetime import date, timedelta
 from utils.error_handler import error_handler
 from utils.dimension_lookup import DimensionLookup
 from utils.logger import Logger
+from utils.config import Config
 from sqlalchemy import (
     bindparam,
     MetaData,
@@ -24,7 +25,7 @@ class Agent:
         self._con_dw: Engine = con_dw
         self._con_sap: Engine = con_sap
         self._lookup: DimensionLookup = DimensionLookup(con_dw)
-        self.TABLE_NAME = "AgentDim"
+        self._config = Config.get_instance()
 
     @error_handler
     def run(self) -> None:
@@ -55,7 +56,7 @@ class Agent:
 
         # Define AgentDim Table
         agent_table: Table = Table(
-            self.TABLE_NAME,
+            self._config.TABLE_AGENT_DIM,
             metadata,
             Column("AgentId", Integer, primary_key=True),
             Column("AgentType", String(10)),
@@ -72,7 +73,7 @@ class Agent:
         )
 
         stmt_update_etl = text(
-            """UPDATE ETLInfo SET ProcessDate = GETDATE() WHERE ETL = 'process_agents'"""
+            f"UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() WHERE ETL = 'process_agents'"
         )
 
         with self._con_dw.begin() as conn:
