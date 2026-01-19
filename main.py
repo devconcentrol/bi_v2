@@ -21,7 +21,7 @@ def main() -> None:
         con_hana = create_engine(config.HANA_CONNECTION)
         con_datawarehouse = create_engine(config.DW_CONNECTION)
 
-        # Logger().info("Starting ETL processes")
+        Logger().info("Starting ETL processes")
 
         # Initialize dimension lookup
         lookup = DimensionLookup(con_datawarehouse)
@@ -40,9 +40,17 @@ def main() -> None:
         schedule.every().day.at("01:15").do(material_dim_processor.run)
         # material_dim_processor.run()
 
-        # # Costing Fact        
-        costing_fact_processor = CostingFactETL(con_datawarehouse, lookup)
-        schedule.every().day.at("02:00").do(costing_fact_processor.run)       
+        # vendor_dim_processor = VendorDim(con_datawarehouse, con_hana, lookup)
+        # # schedule.every().day.at("01:20").do(vendor_dim_processor.run)
+        # vendor_dim_processor.run()
+
+        contact_dim_processor = ContactDim(con_datawarehouse, con_hana, lookup)
+        # schedule.every().day.at("01:25").do(contact_dim_processor.run)
+        contact_dim_processor.run()
+
+        # # Process Costing Fact
+        # costing_fact_processor = CostingFactETL(con_datawarehouse, lookup)
+        # schedule.every().day.at("02:00").do(costing_fact_processor.run)       
 
         # # EWM Tasks
         ewm_tasks_fact_processor = EWMTasksFactETL(con_datawarehouse, con_hana, lookup)
