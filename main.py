@@ -7,6 +7,8 @@ from ewm_task_fact import EWMTasksFactETL
 from dimensions.agent_dim import AgentDim
 from dimensions.customer_dim import CustomerDim
 from dimensions.material_dim import MaterialDim
+from dimensions.vendor_dim import VendorDim
+from dimensions.contact_dim import ContactDim
 import schedule
 import time
 
@@ -40,17 +42,17 @@ def main() -> None:
         schedule.every().day.at("01:15").do(material_dim_processor.run)
         # material_dim_processor.run()
 
-        # vendor_dim_processor = VendorDim(con_datawarehouse, con_hana, lookup)
-        # # schedule.every().day.at("01:20").do(vendor_dim_processor.run)
+        vendor_dim_processor = VendorDim(con_datawarehouse, con_hana, lookup)
+        schedule.every().day.at("01:20").do(vendor_dim_processor.run)
         # vendor_dim_processor.run()
 
         contact_dim_processor = ContactDim(con_datawarehouse, con_hana, lookup)
-        # schedule.every().day.at("01:25").do(contact_dim_processor.run)
-        contact_dim_processor.run()
+        schedule.every().day.at("01:25").do(contact_dim_processor.run)
+        # contact_dim_processor.run()
 
         # # Process Costing Fact
-        # costing_fact_processor = CostingFactETL(con_datawarehouse, lookup)
-        # schedule.every().day.at("02:00").do(costing_fact_processor.run)       
+        costing_fact_processor = CostingFactETL(con_datawarehouse, lookup)
+        schedule.every().day.at("02:00").do(costing_fact_processor.run)       
 
         # # EWM Tasks
         ewm_tasks_fact_processor = EWMTasksFactETL(con_datawarehouse, con_hana, lookup)

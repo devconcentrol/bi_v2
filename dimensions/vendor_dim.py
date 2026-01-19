@@ -36,7 +36,7 @@ class VendorDim:
     @error_handler
     def run(self):
         Logger().info("Starting vendor processing")
-        yesterday = (date.today() - timedelta(days=1)).strftime("%Y%m%d")
+        yesterday = (date.today() - timedelta(days=1)).strftime("%Y%m%d")        
 
         stmt_update_etl = text(
              f"""UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() WHERE ETL = 'process_vendors'"""
@@ -88,13 +88,19 @@ class VendorDim:
         # Region lookup requires composite key: CountryId (from map) + RegionCode (from source)
         # Handle cases where CountryId might be null (NaN) which converts to float. 
         # Safest is to use the mapped column if available, else fillna.
-        results["temp_country_id"] = results["CountryId"].fillna(0).astype("Int64").astype(str)
-        results["region_search_key"] = results["temp_country_id"] + results["regio"]
+        
+        results["region_search_key"] = (
+            results["CountryId"].fillna(0).astype("Int64").astype(str) + results["regio"]
+        ).where(results["CountryId"].notna() & (results["CountryId"] != ""), None)
+        
         results["RegionId"] = results["region_search_key"].map(region_map)
         
         # Vendor Lookup for Insert/Update
         vendor_map = self._lookup.get_vendor_map()
         results["VendId"] = results["lifnr"].map(vendor_map)
+
+        # Replace nan values in float columns
+        results.replace(float( "nan"), None, inplace=True)
 
         # Split Updates/Inserts
         updates_df = results[results["VendId"].notna()]
@@ -105,8 +111,7 @@ class VendorDim:
         # Build update values dynamically using COLUMN_MAPPING
         update_values = {
             db_col: bindparam(f"b_{db_col}") 
-            for db_col, df_col in self.COLUMN_MAPPING.items() 
-            if df_col is not None 
+            for db_col, df_col in self.COLUMN_MAPPING.items() if db_col not in ["VendCode"]            
         }
         
         stmt_update_vendors: Update = (
@@ -119,8 +124,7 @@ class VendorDim:
             if not updates_df.empty:
                 rename_dict = {
                     df_col: f"b_{db_col}"
-                    for db_col, df_col in self.COLUMN_MAPPING.items()
-                    if df_col is not None
+                    for db_col, df_col in self.COLUMN_MAPPING.items() if df_col not in ["VendCode"]
                 }
                 rename_dict["VendId"] = "b_VendId"
 
@@ -144,6 +148,4 @@ class VendorDim:
                 
                 conn.execute(stmt_insert_vendors, insert_data) # type: ignore
 
-            conn.execute(stmt_update_etl)
-        
-        self._lookup.invalidate_vendor_cache()
+            conn.execute(stmt_update_etl)        
