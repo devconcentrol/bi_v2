@@ -29,13 +29,10 @@ class EWMTasksFactETL:
     @error_handler
     def run(self) -> None:
         Logger().info("Processing EWM tasks...")
-        # Date calculation in Python: 2 months ago from the start of the current month
+        # Date calculation in Python: 1 months ago from the start of the current month
         today = date.today()
         first_day_this_month = today.replace(day=1)
-        filter_date = (first_day_this_month - timedelta(days=1)).replace(
-            day=1
-        ) - timedelta(days=1)
-        filter_date = filter_date.replace(day=1)
+        filter_date = (first_day_this_month - timedelta(days=1)).replace(day=1) 
         filter_date_sap = filter_date.strftime("%Y%m%d")
 
         sql_get_tasks = f"""
@@ -64,9 +61,9 @@ class EWMTasksFactETL:
                                    PROD_ORDER,
                                    TOSTAT
                             FROM SAPSR3.ZCON_EWM_TASK                             
-                            WHERE FILTER_CREATE_DATE >= '{filter_date_sap}'
+                            WHERE FILTER_CREATE_DATE >= :filter_date_sap
                         """
-        results: pd.DataFrame = pd.read_sql(sql_get_tasks, con=self._con_sap)
+        results: pd.DataFrame = pd.read_sql(sql_get_tasks, con=self._con_sap, params={"filter_date_sap": filter_date_sap}   )
         # normalize column names to lowercase to make downstream accesses predictable
         results.columns = results.columns.str.lower()
 
