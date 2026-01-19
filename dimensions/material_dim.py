@@ -154,6 +154,9 @@ class MaterialDim:
         material_map = self._lookup.get_material_map()
         results["MaterialId"] = results["matnr"].map(material_map)
 
+        # Replace nan values with None
+        results.replace(float('nan'), None, inplace=True)
+
         # Split Updates/Inserts
         updates_df = results[results["MaterialId"].notna()]
         inserts_df = results[results["MaterialId"].isna()]
@@ -179,8 +182,7 @@ class MaterialDim:
                     for db_col, df_col in self.COLUMN_MAPPING.items() if db_col not in ["MaterialCode","CreatedDate"]
                 }
                 rename_dict["MaterialId"] = "b_MaterialId"
-
-                updates_df.replace(float('nan'), None, inplace=True)
+                
                 update_data = updates_df.rename(columns=rename_dict)[
                     list(rename_dict.values())
                 ].to_dict(orient="records")
@@ -194,8 +196,7 @@ class MaterialDim:
                     for db_col, df_col in self.COLUMN_MAPPING.items()
                     if df_col is not None
                 }
-                
-                inserts_df.replace(float('nan'), None, inplace=True)
+                                
                 insert_data = inserts_df.rename(columns=rename_dict_insert)[
                     list(rename_dict_insert.values())
                 ].to_dict(orient="records")

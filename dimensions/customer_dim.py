@@ -171,6 +171,9 @@ class CustomerDim:
         )
         results["RegionId"] = results["region_key"].map(region_map)
 
+        # Replace nan values with None
+        results.replace(float('nan'), None, inplace=True)
+        
         # Split into updates and inserts
         updates_df = results[results["CustId"].notna()]
         inserts_df = results[results["CustId"].isna()]
@@ -196,8 +199,7 @@ class CustomerDim:
                     for db_col, df_col in self.COLUMN_MAPPING.items() if db_col not in ["CustCode", "CreatedDate"]
                 }
                 rename_dict["CustId"] = "b_CustId"  # Key for update
-                
-                updates_df.replace(float('nan'), None, inplace=True)
+                                
                 update_data = updates_df.rename(columns=rename_dict)[
                     list(rename_dict.values())
                 ].to_dict(orient="records")
@@ -211,8 +213,7 @@ class CustomerDim:
                 rename_dict_insert = {
                     df_col: db_col for db_col, df_col in self.COLUMN_MAPPING.items()
                 }
-
-                inserts_df.replace(float('nan'), None, inplace=True)
+                
                 insert_data = inserts_df.rename(columns=rename_dict_insert)[
                     list(rename_dict_insert.values())
                 ].to_dict(orient="records")
