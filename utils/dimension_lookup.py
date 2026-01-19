@@ -21,6 +21,7 @@ class DimensionLookup:
     _family_map: dict | None
     _subfamily_map: dict | None
     _material_status_map: dict | None
+    _vendor_map: dict | None
 
     def __init__(self, con_dw: Engine):
         self._con_dw: Engine = con_dw
@@ -37,6 +38,7 @@ class DimensionLookup:
         self._family_map = None
         self._subfamily_map = None
         self._material_status_map = None
+        self._vendor_map = None
 
     def invalidate_caches(self) -> None:
         self._customer_map = None
@@ -53,7 +55,16 @@ class DimensionLookup:
         self._family_map = None
         self._subfamily_map = None
         self._material_status_map = None    
+        self._vendor_map = None
         self._material_map = None
+
+    def invalidate_vendor_cache(self) -> None:
+        self._vendor_map = None
+
+    def _load_vendors(self) -> pd.DataFrame:
+        Logger().info("Cache --> Loading vendors from DB")
+        vendor_query = "SELECT VendId, VendCode FROM VendorDim"
+        return pd.read_sql(vendor_query, self._con_dw)
 
     def _load_customers(self) -> pd.DataFrame:
         Logger().info("Cache --> Loading customers from DB")
@@ -296,3 +307,13 @@ class DimensionLookup:
             zip(df_status.MaterialStatusCode.values, df_status.MaterialStatusId.values)
         )
         return self._material_status_map
+
+    def get_vendor_map(self) -> dict:
+        if self._vendor_map is not None:
+            return self._vendor_map
+
+        df_vendor = self._load_vendors()
+        self._vendor_map = dict(
+            zip(df_vendor.VendCode.values, df_vendor.VendId.values)
+        )
+        return self._vendor_map
