@@ -28,10 +28,6 @@ class Config:
         if not self.COSTING_PATH:
             raise ValueError("COSTING_PATH not set in environment.")
 
-        # Shared Constants
-        self.DEFAULT_CHANNEL = "10"
-        self.DEFAULT_DIVISION = "10"
-        
         # ETL Table Names
         self.TABLE_COSTING_FACT = "CostingFact"
         self.TABLE_AGENT_DIM = "AgentDim"
@@ -39,6 +35,13 @@ class Config:
         self.TABLE_ETL_INFO = "ETLInfo"
         self.TABLE_CUSTOMER_DIM = "CustomerDim"
         self.TABLE_MATERIAL_DIM = "MaterialsDim"
+        self.TABLE_VENDOR_DIM = "VendorDim"
+        self.TABLE_CONTACT_DIM = "ContactDim"
+
+        # Standard Constants
+        self.DEFAULT_SALES_ORG = "1000"
+        self.DEFAULT_CHANNEL = "10"
+        self.DEFAULT_DIVISION = "10"
 
     @classmethod
     def get_instance(cls):
