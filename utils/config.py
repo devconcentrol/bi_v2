@@ -38,11 +38,15 @@ class Config:
         self.TABLE_VENDOR_DIM = "VendorDim"
         self.TABLE_CONTACT_DIM = "ContactDim"
         self.TABLE_EXTENDED_STOCK_FACT = "ExtendedStockFact"
+        self.TABLE_SALES_FACT = "SalesFactTmp"
 
         # Standard Constants
         self.DEFAULT_SALES_ORG = "1000"
         self.DEFAULT_CHANNEL = "10"
         self.DEFAULT_DIVISION = "10"
+
+        # Economic Sales Type
+        self.ECONOMIC_SALES_TYPE = "ZCRP"
 
     @classmethod
     def get_instance(cls):
