@@ -4,6 +4,7 @@ from utils.logger import Logger
 from utils.config import Config
 from costing_fact import CostingFactETL
 from ewm_task_fact import EWMTasksFactETL
+from extended_stock_fact import ExtendedStockFactETL
 from dimensions.agent_dim import AgentDim
 from dimensions.customer_dim import CustomerDim
 from dimensions.material_dim import MaterialDim
@@ -57,7 +58,12 @@ def main() -> None:
         # # EWM Tasks
         ewm_tasks_fact_processor = EWMTasksFactETL(con_datawarehouse, con_hana, lookup)
         schedule.every().day.at("03:00").do(ewm_tasks_fact_processor.run)
-        # # ewm_tasks_processor.run()        
+        # # ewm_tasks_processor.run()     
+
+        # # Extended Stock
+        extended_stock_fact_processor = ExtendedStockFactETL(con_datawarehouse, con_hana, lookup)
+        schedule.every().day.at("03:05").do(extended_stock_fact_processor.run)
+        # extended_stock_fact_processor.run() 
 
         while True:
             schedule.run_pending()
