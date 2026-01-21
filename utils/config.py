@@ -38,7 +38,8 @@ class Config:
         self.TABLE_VENDOR_DIM = "VendorDim"
         self.TABLE_CONTACT_DIM = "ContactDim"
         self.TABLE_EXTENDED_STOCK_FACT = "ExtendedStockFact"
-        self.TABLE_SALES_FACT = "SalesFactTmp"
+        self.TABLE_EXTENDED_BATCH_STOCK_FACT = "ExtendedBatchStockFact"
+        self.TABLE_SALES_FACT = "SalesFact"
 
         # Standard Constants
         self.DEFAULT_SALES_ORG = "1000"
