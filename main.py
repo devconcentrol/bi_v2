@@ -7,6 +7,7 @@ from ewm_task_fact import EWMTasksFactETL
 from extended_stock_fact import ExtendedStockFactETL
 from sales_fact import SalesFactETL
 from extended_batch_stock_fact import ExtendedBatchStockFactETL
+from monitor_stock_fact import MonitorStockFactETL
 from dimensions.agent_dim import AgentDim
 from dimensions.customer_dim import CustomerDim
 from dimensions.material_dim import MaterialDim
@@ -76,6 +77,11 @@ def main() -> None:
         extended_batch_stock_fact_processor = ExtendedBatchStockFactETL(con_datawarehouse, con_hana, lookup)
         schedule.every().day.at("03:15").do(extended_batch_stock_fact_processor.run)
         # extended_batch_stock_fact_processor.run() 
+
+        # # Monitor Stock Fact
+        monitor_stock_fact_processor = MonitorStockFactETL(con_datawarehouse, con_hana, lookup)
+        schedule.every().day.at("14:00").do(monitor_stock_fact_processor.run)
+        # monitor_stock_fact_processor.run()
 
         while True:
             schedule.run_pending()

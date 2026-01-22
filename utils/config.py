@@ -40,6 +40,7 @@ class Config:
         self.TABLE_EXTENDED_STOCK_FACT = "ExtendedStockFact"
         self.TABLE_EXTENDED_BATCH_STOCK_FACT = "ExtendedBatchStockFact"
         self.TABLE_SALES_FACT = "SalesFact"
+        self.TABLE_MONITOR_STOCK_FACT = "StockLocationFact"
 
         # Standard Constants
         self.DEFAULT_SALES_ORG = "1000"
