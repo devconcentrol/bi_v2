@@ -17,9 +17,36 @@ from sqlalchemy import (
     Date,
     Time,
 )
+from base_fact_etl import BaseFactETL
 
 
-class EWMTasksFactETL:
+class EWMTasksFactETL(BaseFactETL):
+    # Rename and select columns to match EWMTaskFact
+    # Mapping: SAP Column -> Table Column
+    COLUMN_MAPPING = {
+        "who": "OrderNum",
+        "tanum": "TaskNum",
+        "hdr_procty": "ClProcAlm",
+        "queue": "Cola",
+        "trart": "Trart",
+        "vlpla": "UbicOrigen",
+        "nlpla": "UbicDestino",
+        "cat": "TipoCat",
+        "vlenr": "UMPOrigen",
+        "nlenr": "UMPDestino",
+        "letyp": "TpUMP",
+        "charg": "Batch",
+        "zewmusu": "UsuExt",
+        "created_by": "CreatedBy",
+        "confirmed_by": "ConfirmedBy",
+        "vltyp": "Tp",
+        "vlber": "Sec",
+        "nltyp": "Tipo",
+        "nlber": "Area",
+        "prod_order": "ProductionOrder",
+        "tostat": "Status",
+    }
+
     def __init__(self, con_dw: Engine, con_sap: Engine, lookup: DimensionLookup):
         self._con_dw: Engine = con_dw
         self._con_sap: Engine = con_sap
@@ -64,6 +91,13 @@ class EWMTasksFactETL:
                             WHERE FILTER_CREATE_DATE >= :filter_date_sap
                         """
         results: pd.DataFrame = pd.read_sql(sql_get_tasks, con=self._con_sap, params={"filter_date_sap": filter_date_sap}   )
+
+        if results.empty:
+            Logger().info("No EWM tasks found.")
+            with self._con_dw.connect() as conn:
+                self.update_etl_info(conn, "process_ewm_tasks")
+            return
+
         # normalize column names to lowercase to make downstream accesses predictable
         results.columns = results.columns.str.lower()
 
@@ -71,129 +105,68 @@ class EWMTasksFactETL:
             results.sort_values(["who", "prod_order"], ascending=False)
             .groupby("who")["prod_order"]
             .transform("first")
+        )        
+    
+        # Vectorized mapping for MaterialId
+        material_map = self._lookup.get_material_map()
+        results["MaterialId"] = results["matnr"].map(material_map)
+
+        created_dt = self.convert_sap_ts(results["created_at"])
+        results["CreatedDate"] = created_dt.dt.date
+        results["CreatedTime"] = created_dt.dt.time
+
+        confirmed_dt = self.convert_sap_ts(results["confirmed_at"])
+        results["ConfirmedDate"] = confirmed_dt.dt.date
+        results["ConfirmedTime"] = confirmed_dt.dt.time
+
+        results = results.rename(columns=self.COLUMN_MAPPING)
+
+        final_cols = list(self.COLUMN_MAPPING.values())            
+        insert_data = results[final_cols].where(pd.notnull(results), None).to_dict(orient="records")
+
+        # Define the table for insertion
+        metadata: MetaData = MetaData()
+        ewm_tasks_table: Table = Table(
+            self._config.TABLE_EWM_TASK_FACT,
+            metadata,
+            Column("OrderNum", String(15)),
+            Column("TaskNum", String(15)),
+            Column("ClProcAlm", String(10)),
+            Column("Cola", String(15)),
+            Column("Trart", String(5)),
+            Column("UbicOrigen", String(25)),
+            Column("UbicDestino", String(25)),
+            Column("TipoCat", String(10)),
+            Column("UMPOrigen", String(25)),
+            Column("UMPDestino", String(25)),
+            Column("TpUMP", String(10)),
+            Column("MaterialId", Integer),
+            Column("Batch", String(25)),
+            Column("UsuExt", String(100)),
+            Column("CreatedBy", String(100)),
+            Column("CreatedDate", Date),
+            Column("CreatedTime", Time),
+            Column("ConfirmedBy", String(100)),
+            Column("ConfirmedDate", Date),
+            Column("ConfirmedTime", Time),
+            Column("Tp", String(15)),
+            Column("Sec", String(15)),
+            Column("Tipo", String(15)),
+            Column("Area", String(15)),
+            Column("ProductionOrder", String(15)),
+            Column("Status", String(1)),
         )
-
-        insert_data = []
-
-        if not results.empty:
-            # Vectorized mapping for MaterialId
-            material_map = self._lookup.get_material_map()
-            results["MaterialId"] = results["matnr"].map(material_map)
-
-            created_dt = self.convert_sap_ts(results["created_at"])
-            results["CreatedDate"] = created_dt.dt.date
-            results["CreatedTime"] = created_dt.dt.time
-
-            confirmed_dt = self.convert_sap_ts(results["confirmed_at"])
-            results["ConfirmedDate"] = confirmed_dt.dt.date
-            results["ConfirmedTime"] = confirmed_dt.dt.time
-
-            # Rename and select columns to match EWMTaskFact
-            # Mapping: SAP Column -> Table Column
-            mapping = {
-                "who": "OrderNum",
-                "tanum": "TaskNum",
-                "hdr_procty": "ClProcAlm",
-                "queue": "Cola",
-                "trart": "Trart",
-                "vlpla": "UbicOrigen",
-                "nlpla": "UbicDestino",
-                "cat": "TipoCat",
-                "vlenr": "UMPOrigen",
-                "nlenr": "UMPDestino",
-                "letyp": "TpUMP",
-                "charg": "Batch",
-                "zewmusu": "UsuExt",
-                "created_by": "CreatedBy",
-                "confirmed_by": "ConfirmedBy",
-                "vltyp": "Tp",
-                "vlber": "Sec",
-                "nltyp": "Tipo",
-                "nlber": "Area",
-                "prod_order": "ProductionOrder",
-                "tostat": "Status",
-            }
-
-            results = results.rename(columns=mapping)
-
-            # Prepare for insertion
-            final_cols = [
-                "OrderNum",
-                "TaskNum",
-                "ClProcAlm",
-                "Cola",
-                "Trart",
-                "UbicOrigen",
-                "UbicDestino",
-                "TipoCat",
-                "UMPOrigen",
-                "UMPDestino",
-                "TpUMP",
-                "MaterialId",
-                "Batch",
-                "UsuExt",
-                "CreatedBy",
-                "CreatedDate",
-                "CreatedTime",
-                "ConfirmedBy",
-                "ConfirmedDate",
-                "ConfirmedTime",
-                "Tp",
-                "Sec",
-                "Tipo",
-                "Area",
-                "ProductionOrder",
-                "Status",
-            ]
-
-            insert_data = results[final_cols].to_dict(orient="records")
-
-            # Define the table for insertion
-            metadata: MetaData = MetaData()
-            ewm_tasks_table: Table = Table(
-                self._config.TABLE_EWM_TASK_FACT,
-                metadata,
-                Column("OrderNum", String(15)),
-                Column("TaskNum", String(15)),
-                Column("ClProcAlm", String(10)),
-                Column("Cola", String(15)),
-                Column("Trart", String(5)),
-                Column("UbicOrigen", String(25)),
-                Column("UbicDestino", String(25)),
-                Column("TipoCat", String(10)),
-                Column("UMPOrigen", String(25)),
-                Column("UMPDestino", String(25)),
-                Column("TpUMP", String(10)),
-                Column("MaterialId", Integer),
-                Column("Batch", String(25)),
-                Column("UsuExt", String(100)),
-                Column("CreatedBy", String(100)),
-                Column("CreatedDate", Date),
-                Column("CreatedTime", Time),
-                Column("ConfirmedBy", String(100)),
-                Column("ConfirmedDate", Date),
-                Column("ConfirmedTime", Time),
-                Column("Tp", String(15)),
-                Column("Sec", String(15)),
-                Column("Tipo", String(15)),
-                Column("Area", String(15)),
-                Column("ProductionOrder", String(15)),
-                Column("Status", String(1)),
-            )
 
         stmt_delete = text(f"""
                         DELETE FROM {self._config.TABLE_EWM_TASK_FACT}
                         WHERE CreatedDate >= '{filter_date.strftime("%Y-%m-%d")}'
                         """)
 
-        stmt_update_etl = text(
-            f"UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() WHERE ETL = 'process_ewm_tasks'"
-        )
         with self._con_dw.begin() as conn:
             if len(insert_data) > 0:
                 conn.execute(stmt_delete)
                 conn.execute(insert(ewm_tasks_table), insert_data)  # type: ignore
-            conn.execute(stmt_update_etl)
+            self._update_etl_info(conn, "process_ewm_tasks")
 
     def convert_sap_ts(self, ts_series: pd.Series) -> pd.Series:
         # Vectorized timestamp conversion

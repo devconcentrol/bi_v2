@@ -3,6 +3,7 @@ from utils.error_handler import error_handler
 from utils.dimension_lookup import DimensionLookup
 from utils.logger import Logger
 from utils.config import Config
+from base_fact_etl import BaseFactETL
 from sqlalchemy import (
     MetaData,
     Table,
@@ -17,7 +18,7 @@ from sqlalchemy import (
 )
 
 
-class MonitorStockFactETL:
+class MonitorStockFactETL(BaseFactETL):
     COLUMN_MAPPING = {
         "MaterialId": "MaterialId",
         "lgnum": "EwmStorageLocation",
@@ -37,9 +38,6 @@ class MonitorStockFactETL:
     @error_handler
     def run(self) -> None:
         Logger().info("Processing Monitor Stock Fact...")
-        stmt_update_etl = text(
-            f"UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() WHERE ETL = 'process_monitor_stock'"
-        )
 
         sql_get_stock: str = """
             SELECT MATNR,                                        
@@ -57,7 +55,7 @@ class MonitorStockFactETL:
         if results.empty:
             Logger().info("No monitor stock data found.")
             with self._con_dw.begin() as conn:
-                conn.execute(stmt_update_etl)
+                self._update_etl_info(conn,'process_monitor_stock')
             return
 
         # Normalize columns
@@ -102,7 +100,7 @@ class MonitorStockFactETL:
 
         # Select only the columns that exist in the target table (based on mapping)
         final_cols = list(self.COLUMN_MAPPING.values())
-        insert_records = results[final_cols].to_dict(orient="records")
+        insert_records = results[final_cols].where(pd.notnull(results), None).to_dict(orient="records")
 
         # Database Operations
         stmt_insert_stock: Insert = insert(stock_location_fact_table)
@@ -112,4 +110,4 @@ class MonitorStockFactETL:
                 Logger().info(f"Inserting {len(insert_records)} monitor stock records.")
                 conn.execute(stmt_insert_stock, insert_records)
 
-            conn.execute(stmt_update_etl)
+            self._update_etl_info(conn,'process_monitor_stock')

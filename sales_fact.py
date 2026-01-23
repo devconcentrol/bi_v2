@@ -19,9 +19,10 @@ from utils.error_handler import error_handler
 from utils.dimension_lookup import DimensionLookup
 from utils.logger import Logger
 from utils.config import Config
+from base_fact_etl import BaseFactETL
 
 
-class SalesFactETL:
+class SalesFactETL(BaseFactETL):
     COLUMN_MAPPING = {
         "vkorg": "Organization",
         "vbtyp": "InvoiceType",
@@ -55,10 +56,6 @@ class SalesFactETL:
     def run(self):
         Logger().info("Processing Sales Fact...")
         yesterday = (date.today() - timedelta(days=1)).strftime("%Y%m%d")
-
-        stmt_update_etl = text(
-            f"""UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() WHERE ETL = 'process_sales'"""
-        )
 
         sql_get_sales = """
             SELECT
@@ -113,7 +110,7 @@ class SalesFactETL:
         if results.empty:
             Logger().info("No sales data found.")
             with self._con_dw.begin() as conn:
-                conn.execute(stmt_update_etl)
+                self._update_etl_info(conn,'process_sales')
             return
 
         # Define the table
@@ -194,25 +191,14 @@ class SalesFactETL:
         if "NetRealSalesCost" not in results.columns:
              results["NetRealSalesCost"] = None
 
-        # Filter only columns present in the table definition
-        final_cols = {
-            db_col
-            for df_col,db_col in self.COLUMN_MAPPING.items()            
-        } 
-        
-        # Ensure we only have valid columns
-        results = results[list(final_cols)]
-        
-        # replace NaN with None for SQL insertion
-        results = results.astype(object).where(pd.notnull(results), None)
-
-        converted_results = results.to_dict(orient="records")
+        final_cols = list(self.COLUMN_MAPPING.values())
+        insert_records = results[final_cols].where(pd.notnull(results), None).to_dict(orient="records")
 
         stm_insert_sales: Insert = insert(sales_table)
 
         with self._con_dw.begin() as conn:
-            if len(converted_results) > 0:
-                Logger().info(f"Inserting {len(converted_results)} sales records.")
-                conn.execute(stm_insert_sales, converted_results)
+            if len(insert_records) > 0:
+                Logger().info(f"Inserting {len(insert_records)} sales records.")
+                conn.execute(stm_insert_sales, insert_records)
 
-            conn.execute(stmt_update_etl)
+            self._update_etl_info(conn,'process_sales')

@@ -3,6 +3,7 @@ from utils.error_handler import error_handler
 from utils.dimension_lookup import DimensionLookup
 from utils.logger import Logger
 from utils.config import Config
+from base_fact_etl import BaseFactETL
 from sqlalchemy import (
     MetaData,
     Table,
@@ -17,7 +18,7 @@ from sqlalchemy import (
 )
 
 
-class ExtendedBatchStockFactETL:
+class ExtendedBatchStockFactETL(BaseFactETL):
     COLUMN_MAPPING = {
         "MaterialId": "MaterialId",
         "charg": "BatchNumber",
@@ -40,9 +41,7 @@ class ExtendedBatchStockFactETL:
     @error_handler
     def run(self):
         Logger().info("Processing Extended Batch Stock Fact...")
-        stmt_update_etl = text(
-            f"UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() WHERE ETL = 'process_batch_stock'"
-        )
+
         sql_get_stock = """
                         SELECT WERKS,
                                MATNR,
@@ -62,7 +61,7 @@ class ExtendedBatchStockFactETL:
         if results.empty:
             Logger().info("No batch stock data found.")            
             with self._con_dw.begin() as conn:
-                conn.execute(stmt_update_etl)
+                self._update_etl_info(conn, "process_batch_stock")
             return
 
         # Normalize columns
@@ -110,8 +109,8 @@ class ExtendedBatchStockFactETL:
         results = results.rename(columns=self.COLUMN_MAPPING)
         
         # Select only relevant columns
-        final_cols = [col.name for col in extended_stock_table.columns]
-        insert_records = results[final_cols].to_dict(orient="records")
+        final_cols = list(self.COLUMN_MAPPING.values())
+        insert_records = results[final_cols].where(pd.notnull(results), None).to_dict(orient="records")
 
         stmt_insert_stock: Insert = insert(extended_stock_table)
 
@@ -126,4 +125,4 @@ class ExtendedBatchStockFactETL:
                 Logger().info(f"Inserting {len(insert_records)} batch stock records.")
                 conn.execute(stmt_insert_stock, insert_records)
 
-            conn.execute(stmt_update_etl)
+            self._update_etl_info(conn, "process_batch_stock")

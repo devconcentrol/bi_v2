@@ -4,6 +4,7 @@ from utils.error_handler import error_handler
 from utils.dimension_lookup import DimensionLookup
 from utils.logger import Logger
 from utils.config import Config
+from base_fact_etl import BaseFactETL
 from sqlalchemy import (
     MetaData,
     Table,
@@ -19,7 +20,7 @@ from sqlalchemy import (
 )
 
 
-class ExtendedStockFactETL:
+class ExtendedStockFactETL(BaseFactETL):
     COLUMN_MAPPING = {
         "MaterialId": "MaterialId",
         "lgort":"StorageLocation" ,
@@ -59,13 +60,9 @@ class ExtendedStockFactETL:
         results: pd.DataFrame = pd.read_sql(sql_get_stock, con=self._con_sap)
 
         if results.empty:
-             Logger().info("No stock data found.")
-             # Update ETL info even if empty? Usually yes.
-             stmt_update_etl_empty = text(
-                f"UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() WHERE ETL = 'process_stock'"
-             )
+             Logger().info("No stock data found.")             
              with self._con_dw.begin() as conn:
-                 conn.execute(stmt_update_etl_empty)
+                self._update_etl_info(conn, "process_stock")
              return
 
         # Normalize columns
@@ -114,12 +111,8 @@ class ExtendedStockFactETL:
         
         # Use COLUMN_MAPPING for renaming
         results = results.rename(columns=self.COLUMN_MAPPING)
-        final_cols = {
-            db_col
-            for df_col,db_col in self.COLUMN_MAPPING.items()            
-        }
-        
-        insert_records = results[list(final_cols)].to_dict(orient="records")
+        final_cols = list(self.COLUMN_MAPPING.values())
+        insert_records = results[final_cols].where(pd.notnull(results), None).to_dict(orient="records")
 
         # Database Operations
         stmt_insert_stock: Insert = insert(extended_stock_table)
@@ -130,9 +123,6 @@ class ExtendedStockFactETL:
             f"DELETE FROM {self._config.TABLE_EXTENDED_STOCK_FACT} WHERE StockDate = CAST(GETDATE() as DATE)"
         )
         
-        stmt_update_etl = text(
-            f"UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() WHERE ETL = 'process_stock'"
-        )
 
         with self._con_dw.begin() as conn:
             conn.execute(stmt_delete_stock)
@@ -140,4 +130,4 @@ class ExtendedStockFactETL:
                 Logger().info(f"Inserting {len(insert_records)} stock records.")
                 conn.execute(stmt_insert_stock, insert_records) # type: ignore
 
-            conn.execute(stmt_update_etl)
+            self._update_etl_info(conn, "process_stock")
