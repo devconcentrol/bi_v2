@@ -8,6 +8,10 @@ from extended_stock_fact import ExtendedStockFactETL
 from sales_fact import SalesFactETL
 from extended_batch_stock_fact import ExtendedBatchStockFactETL
 from monitor_stock_fact import MonitorStockFactETL
+from qm_adjustment_fact import QMAdjustmentFactETL
+from qm_inspection_lot_fact import QMInspectionLotFactETL
+from qm_notification_fact import QMNotificationFactETL
+from qm_sample_fact import QMSampleFactETL
 from dimensions.agent_dim import AgentDim
 from dimensions.customer_dim import CustomerDim
 from dimensions.material_dim import MaterialDim
@@ -61,7 +65,7 @@ def main() -> None:
         # # EWM Tasks
         ewm_tasks_fact_processor = EWMTasksFactETL(con_datawarehouse, con_hana, lookup)
         schedule.every().day.at("03:00").do(ewm_tasks_fact_processor.run)
-        # # ewm_tasks_processor.run()     
+        # ewm_tasks_fact_processor.run()     
 
         # # Extended Stock
         extended_stock_fact_processor = ExtendedStockFactETL(con_datawarehouse, con_hana, lookup)
@@ -73,12 +77,32 @@ def main() -> None:
         schedule.every().day.at("03:10").do(sales_fact_processor.run)
         # sales_fact_processor.run() 
 
-        # # Extended Batch Stock
+        # # # Extended Batch Stock
         extended_batch_stock_fact_processor = ExtendedBatchStockFactETL(con_datawarehouse, con_hana, lookup)
         schedule.every().day.at("03:15").do(extended_batch_stock_fact_processor.run)
         # extended_batch_stock_fact_processor.run() 
 
-        # # Monitor Stock Fact
+        # # # QM Adjustment Fact
+        qm_adjustment_fact_processor = QMAdjustmentFactETL(con_datawarehouse, con_hana, lookup)
+        schedule.every().day.at("03:25").do(qm_adjustment_fact_processor.run)
+        # qm_adjustment_fact_processor.run()
+
+        # # # QM Notification Fact
+        qm_notification_fact_processor = QMNotificationFactETL(con_datawarehouse, con_hana, lookup)
+        schedule.every().day.at("03:30").do(qm_notification_fact_processor.run)
+        # qm_notification_fact_processor.run()
+
+        # # # # QM Sample Fact
+        qm_sample_fact_processor = QMSampleFactETL(con_datawarehouse, con_hana, lookup)
+        schedule.every().day.at("03:35").do(qm_sample_fact_processor.run)
+        # qm_sample_fact_processor.run()
+
+        # # # QM Inspection Lot Fact
+        qm_inspection_lot_fact_processor = QMInspectionLotFactETL(con_datawarehouse, con_hana, lookup)
+        schedule.every().day.at("03:40").do(qm_inspection_lot_fact_processor.run)
+        # qm_inspection_lot_fact_processor.run()
+
+        # # # Monitor Stock Fact
         monitor_stock_fact_processor = MonitorStockFactETL(con_datawarehouse, con_hana, lookup)
         schedule.every().day.at("14:00").do(monitor_stock_fact_processor.run)
         # monitor_stock_fact_processor.run()

@@ -30,17 +30,21 @@ class Config:
 
         # ETL Table Names
         self.TABLE_COSTING_FACT = "CostingFact"
-        self.TABLE_AGENT_DIM = "AgentDim"
-        self.TABLE_EWM_TASK_FACT = "EWMTaskFact"
+        self.TABLE_AGENT_DIM = "AgentDim"        
         self.TABLE_ETL_INFO = "ETLInfo"
         self.TABLE_CUSTOMER_DIM = "CustomerDim"
         self.TABLE_MATERIAL_DIM = "MaterialsDim"
         self.TABLE_VENDOR_DIM = "VendorDim"
         self.TABLE_CONTACT_DIM = "ContactDim"
+        self.TABLE_EWM_TASK_FACT = "EWMTaskFact"
         self.TABLE_EXTENDED_STOCK_FACT = "ExtendedStockFact"
         self.TABLE_EXTENDED_BATCH_STOCK_FACT = "ExtendedBatchStockFact"
         self.TABLE_SALES_FACT = "SalesFact"
         self.TABLE_MONITOR_STOCK_FACT = "StockLocationFact"
+        self.TABLE_QM_ADJUSTMENT_FACT = "QMAdjustmentFact"
+        self.TABLE_QM_INSPECTION_LOT_FACT = "QMInspectionLot"        
+        self.TABLE_QM_NOTIFICATION_FACT = "QMNotificationFact"
+        self.TABLE_QM_SAMPLE_ANALYSIS_FACT = "QMSampleAnalysisFact"
 
         # Standard Constants
         self.DEFAULT_SALES_ORG = "1000"
