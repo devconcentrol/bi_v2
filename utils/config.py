@@ -45,6 +45,7 @@ class Config:
         self.TABLE_QM_INSPECTION_LOT_FACT = "QMInspectionLot"        
         self.TABLE_QM_NOTIFICATION_FACT = "QMNotificationFact"
         self.TABLE_QM_SAMPLE_ANALYSIS_FACT = "QMSampleAnalysisFact"
+        self.TABLE_CUSTOMER_PRICE_FACT = "CustomerPriceFact"
 
         # Standard Constants
         self.DEFAULT_SALES_ORG = "1000"

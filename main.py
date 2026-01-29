@@ -1,7 +1,14 @@
 from sqlalchemy import create_engine, Engine
+import schedule
+import time
 from utils.dimension_lookup import DimensionLookup
 from utils.logger import Logger
 from utils.config import Config
+from dimensions.agent_dim import AgentDim
+from dimensions.customer_dim import CustomerDim
+from dimensions.material_dim import MaterialDim
+from dimensions.vendor_dim import VendorDim
+from dimensions.contact_dim import ContactDim
 from costing_fact import CostingFactETL
 from ewm_task_fact import EWMTasksFactETL
 from extended_stock_fact import ExtendedStockFactETL
@@ -12,13 +19,7 @@ from qm_adjustment_fact import QMAdjustmentFactETL
 from qm_inspection_lot_fact import QMInspectionLotFactETL
 from qm_notification_fact import QMNotificationFactETL
 from qm_sample_fact import QMSampleFactETL
-from dimensions.agent_dim import AgentDim
-from dimensions.customer_dim import CustomerDim
-from dimensions.material_dim import MaterialDim
-from dimensions.vendor_dim import VendorDim
-from dimensions.contact_dim import ContactDim
-import schedule
-import time
+from customer_price_fact import CustomerPriceFactETL
 
 
 def main() -> None:
@@ -101,6 +102,11 @@ def main() -> None:
         qm_inspection_lot_fact_processor = QMInspectionLotFactETL(con_datawarehouse, con_hana, lookup)
         schedule.every().day.at("03:40").do(qm_inspection_lot_fact_processor.run)
         # qm_inspection_lot_fact_processor.run()
+
+        # # # # Customer Price Fact
+        customer_price_fact_processor = CustomerPriceFactETL(con_datawarehouse, con_hana, lookup)
+        schedule.every().day.at("03:45").do(customer_price_fact_processor.run)
+        #customer_price_fact_processor.run()
 
         # # # Monitor Stock Fact
         monitor_stock_fact_processor = MonitorStockFactETL(con_datawarehouse, con_hana, lookup)
