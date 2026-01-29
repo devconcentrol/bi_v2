@@ -5,7 +5,6 @@ import pandas as pd
 from sqlalchemy import Engine, text
 from utils.dimension_lookup import DimensionLookup
 from utils.logger import Logger
-from utils.date_utils import parse_date
 from utils.error_handler import error_handler
 from utils.config import Config
 
@@ -61,9 +60,8 @@ class CostingFactETL:
                 ],
             )
 
-            # 2. Transform Data
-            # Parse Dates using the robust utility
-            df["CostingDate"] = df["CostingDate"].apply(parse_date)
+            # 2. Transform Data            
+            df["CostingDate"] = pd.to_datetime(df["CostingDate"], format="%Y%m%d", errors="coerce").dt.date
 
             # Map Customers
             df["CustKey"] = (

@@ -4,6 +4,7 @@ from utils.dimension_lookup import DimensionLookup
 from utils.logger import Logger
 from utils.config import Config
 from costing_fact import CostingFactETL
+from dimensions.customer_dim import CustomerDim
 
 def main():
     con_hana: Engine | None = None
@@ -21,8 +22,12 @@ def main():
         lookup = DimensionLookup(con_datawarehouse)
 
         # Process Costing Fact
-        costing_fact_processor = CostingFactETL(con_datawarehouse, lookup)
-        costing_fact_processor.run()
+        # costing_fact_processor = CostingFactETL(con_datawarehouse, lookup)
+        # costing_fact_processor.run()
+
+        # Process Customer Dim
+        customer_dim_processor = CustomerDim(con_datawarehouse, con_hana, lookup)
+        customer_dim_processor.run()
 
     except Exception as e:
         Logger().error(f"Critical error in main: {e}")

@@ -3,7 +3,6 @@ from utils.error_handler import error_handler
 from utils.dimension_lookup import DimensionLookup
 from utils.config import Config
 from utils.logger import Logger
-from utils.date_utils import parse_date
 from datetime import date, timedelta
 from sqlalchemy import (
     bindparam,
@@ -72,7 +71,7 @@ class CustomerDim:
                             FROM SAPSR3.ZCON_V_CUSTOMER                            
                             WHERE CHDAT = :yesterday                            
                         """
-        results: pd.DataFrame = pd.read_sql(sql_get_customers, self._con_sap, params = {"yesterday": yesterday})
+        results: pd.DataFrame = pd.read_sql(sql_get_customers, self._con_sap, params = {"yesterday": yesterday},dtype_backend="numpy_nullable")
 
         if results.empty:
             Logger().info("No customers found for processing")
@@ -124,8 +123,8 @@ class CustomerDim:
 
         # Transformation
         results["name"] = results["name"].str.replace(CRLF, "", regex=False)
-        results["crdat"] = results["crdat"].apply(lambda x: parse_date(x))
-        results["chdat"] = results["chdat"].apply(lambda x: parse_date(x))
+        results["crdat"] = pd.to_datetime(results["crdat"], format="%Y%m%d", errors="coerce").dt.date
+        results["chdat"] = pd.to_datetime(results["chdat"], format="%Y%m%d", errors="coerce").dt.date
 
         # Lookups
         results["search_key"] = (

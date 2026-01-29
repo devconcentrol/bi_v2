@@ -4,7 +4,6 @@ from utils.error_handler import error_handler
 from utils.dimension_lookup import DimensionLookup
 from utils.config import Config
 from utils.logger import Logger
-from utils.date_utils import parse_date
 from sqlalchemy import (
     bindparam,
     MetaData,
@@ -141,7 +140,8 @@ class MaterialDim:
         results["MaterialStatusId"] = results["mstae"].map(status_map)
         
         # Dates and Numeric conversions
-        results["ersda"] = results["ersda"].apply(lambda x: parse_date(x))
+        results["ersda"] = pd.to_datetime(df["ersda"],format="%Y%m%d", errors="coerce").dt.date
+        
         # Ensure numeric fields are numeric
         results["minbe"] = pd.to_numeric(results["minbe"], errors='coerce').fillna(0) / 1000
         results["eisbe"] = pd.to_numeric(results["eisbe"], errors='coerce')
