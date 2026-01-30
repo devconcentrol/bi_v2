@@ -20,6 +20,8 @@ from qm_inspection_lot_fact import QMInspectionLotFactETL
 from qm_notification_fact import QMNotificationFactETL
 from qm_sample_fact import QMSampleFactETL
 from customer_price_fact import CustomerPriceFactETL
+from sales_open_orders_fact import SalesOpenOrdersFactETL
+from planned_orders_qty_fact import PlannedOrdersQtyFactETL
 
 
 def main() -> None:
@@ -129,6 +131,13 @@ def main() -> None:
         )
         schedule.every().day.at("03:50").do(planned_orders_qty_fact_processor.run)
         # planned_orders_qty_fact_processor.run()
+
+        # # # Sales Open Orders Fact
+        sales_open_orders_fact_processor = SalesOpenOrdersFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
+        schedule.every().day.at("03:55").do(sales_open_orders_fact_processor.run)
+        # sales_open_orders_fact_processor.run()
 
         # # # Monitor Stock Fact
         monitor_stock_fact_processor = MonitorStockFactETL(

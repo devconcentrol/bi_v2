@@ -6,6 +6,7 @@ from costing_fact import CostingFactETL
 from dimensions.customer_dim import CustomerDim
 from customer_price_fact import CustomerPriceFactETL
 from planned_orders_qty_fact import PlannedOrdersQtyFactETL
+from sales_open_orders_fact import SalesOpenOrdersFactETL
 
 
 def main():
@@ -41,10 +42,16 @@ def main():
         # customer_price_fact_processor.run()
 
         # Process Planned Orders Qty Fact
-        planned_orders_qty_fact_processor = PlannedOrdersQtyFactETL(
+        # planned_orders_qty_fact_processor = PlannedOrdersQtyFactETL(
+        #     con_datawarehouse, con_hana, lookup
+        # )
+        # planned_orders_qty_fact_processor.run()
+
+        # Process Sales Open Orders Fact
+        sales_open_orders_fact_processor = SalesOpenOrdersFactETL(
             con_datawarehouse, con_hana, lookup
         )
-        planned_orders_qty_fact_processor.run()
+        sales_open_orders_fact_processor.run()
 
     except Exception as e:
         Logger().error(f"Critical error in main: {e}")

@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 
+
 class Config:
     _instance = None
 
@@ -12,14 +13,14 @@ class Config:
 
     def _load_config(self):
         load_dotenv(".env")
-        
+
         # Connections
         self.HANA_CONNECTION = os.getenv("HANA_CONNECTION")
         self.DW_CONNECTION = os.getenv("DW_CONNECTION")
-        
+
         # Paths
         self.COSTING_PATH = os.getenv("COSTING_PATH")
-        
+
         # Validation
         if not self.HANA_CONNECTION:
             raise ValueError("HANA_CONNECTION not set in environment.")
@@ -30,7 +31,7 @@ class Config:
 
         # ETL Table Names
         self.TABLE_COSTING_FACT = "CostingFact"
-        self.TABLE_AGENT_DIM = "AgentDim"        
+        self.TABLE_AGENT_DIM = "AgentDim"
         self.TABLE_ETL_INFO = "ETLInfo"
         self.TABLE_CUSTOMER_DIM = "CustomerDim"
         self.TABLE_MATERIAL_DIM = "MaterialsDim"
@@ -42,11 +43,13 @@ class Config:
         self.TABLE_SALES_FACT = "SalesFact"
         self.TABLE_MONITOR_STOCK_FACT = "StockLocationFact"
         self.TABLE_QM_ADJUSTMENT_FACT = "QMAdjustmentFact"
-        self.TABLE_QM_INSPECTION_LOT_FACT = "QMInspectionLot"        
+        self.TABLE_QM_INSPECTION_LOT_FACT = "QMInspectionLot"
         self.TABLE_QM_NOTIFICATION_FACT = "QMNotificationFact"
         self.TABLE_QM_SAMPLE_ANALYSIS_FACT = "QMSampleAnalysisFact"
         self.TABLE_CUSTOMER_PRICE_FACT = "CustomerPriceFact"
         self.TABLE_PLANNED_ORDERS_QTY_FACT = "ProcessOrderQtyFact"
+        self.TABLE_SALES_OPEN_ORDERS_FACT = "SalesOpenOrdersFact"
+        self.TABLE_SALES_OPEN_ORDERS_FACT_HIST = "SalesOpenOrdersFactHist"
 
         # Standard Constants
         self.DEFAULT_SALES_ORG = "1000"
