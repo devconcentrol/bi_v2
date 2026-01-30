@@ -123,6 +123,13 @@ def main() -> None:
         schedule.every().day.at("03:45").do(customer_price_fact_processor.run)
         # customer_price_fact_processor.run()
 
+        # # # Planned Orders Qty Fact
+        planned_orders_qty_fact_processor = PlannedOrdersQtyFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
+        schedule.every().day.at("03:50").do(planned_orders_qty_fact_processor.run)
+        # planned_orders_qty_fact_processor.run()
+
         # # # Monitor Stock Fact
         monitor_stock_fact_processor = MonitorStockFactETL(
             con_datawarehouse, con_hana, lookup
