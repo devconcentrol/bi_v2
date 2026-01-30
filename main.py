@@ -27,8 +27,11 @@ def main() -> None:
     con_datawarehouse: Engine | None = None
     try:
         config = Config.get_instance()
-        
+
         # # Create database connections
+        if config.HANA_CONNECTION is None or config.DW_CONNECTION is None:
+            raise ValueError("Database connection strings are not configured")
+
         con_hana = create_engine(config.HANA_CONNECTION)
         con_datawarehouse = create_engine(config.DW_CONNECTION)
 
@@ -61,35 +64,43 @@ def main() -> None:
 
         # # Process Costing Fact
         costing_fact_processor = CostingFactETL(con_datawarehouse, lookup)
-        schedule.every().day.at("02:00").do(costing_fact_processor.run)       
+        schedule.every().day.at("02:00").do(costing_fact_processor.run)
 
         # # EWM Tasks
         ewm_tasks_fact_processor = EWMTasksFactETL(con_datawarehouse, con_hana, lookup)
         schedule.every().day.at("03:00").do(ewm_tasks_fact_processor.run)
-        # ewm_tasks_fact_processor.run()     
+        # ewm_tasks_fact_processor.run()
 
         # # Extended Stock
-        extended_stock_fact_processor = ExtendedStockFactETL(con_datawarehouse, con_hana, lookup)
+        extended_stock_fact_processor = ExtendedStockFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
         schedule.every().day.at("03:05").do(extended_stock_fact_processor.run)
-        # extended_stock_fact_processor.run() 
-        
+        # extended_stock_fact_processor.run()
+
         # # Sales Fact
         sales_fact_processor = SalesFactETL(con_datawarehouse, con_hana, lookup)
         schedule.every().day.at("03:10").do(sales_fact_processor.run)
-        # sales_fact_processor.run() 
+        # sales_fact_processor.run()
 
         # # # Extended Batch Stock
-        extended_batch_stock_fact_processor = ExtendedBatchStockFactETL(con_datawarehouse, con_hana, lookup)
+        extended_batch_stock_fact_processor = ExtendedBatchStockFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
         schedule.every().day.at("03:15").do(extended_batch_stock_fact_processor.run)
-        # extended_batch_stock_fact_processor.run() 
+        # extended_batch_stock_fact_processor.run()
 
         # # # QM Adjustment Fact
-        qm_adjustment_fact_processor = QMAdjustmentFactETL(con_datawarehouse, con_hana, lookup)
+        qm_adjustment_fact_processor = QMAdjustmentFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
         schedule.every().day.at("03:25").do(qm_adjustment_fact_processor.run)
         # qm_adjustment_fact_processor.run()
 
         # # # QM Notification Fact
-        qm_notification_fact_processor = QMNotificationFactETL(con_datawarehouse, con_hana, lookup)
+        qm_notification_fact_processor = QMNotificationFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
         schedule.every().day.at("03:30").do(qm_notification_fact_processor.run)
         # qm_notification_fact_processor.run()
 
@@ -99,17 +110,23 @@ def main() -> None:
         # qm_sample_fact_processor.run()
 
         # # # QM Inspection Lot Fact
-        qm_inspection_lot_fact_processor = QMInspectionLotFactETL(con_datawarehouse, con_hana, lookup)
+        qm_inspection_lot_fact_processor = QMInspectionLotFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
         schedule.every().day.at("03:40").do(qm_inspection_lot_fact_processor.run)
         # qm_inspection_lot_fact_processor.run()
 
         # # # # Customer Price Fact
-        customer_price_fact_processor = CustomerPriceFactETL(con_datawarehouse, con_hana, lookup)
+        customer_price_fact_processor = CustomerPriceFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
         schedule.every().day.at("03:45").do(customer_price_fact_processor.run)
-        #customer_price_fact_processor.run()
+        # customer_price_fact_processor.run()
 
         # # # Monitor Stock Fact
-        monitor_stock_fact_processor = MonitorStockFactETL(con_datawarehouse, con_hana, lookup)
+        monitor_stock_fact_processor = MonitorStockFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
         schedule.every().day.at("14:00").do(monitor_stock_fact_processor.run)
         # monitor_stock_fact_processor.run()
 
