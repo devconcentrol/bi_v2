@@ -13,7 +13,7 @@ class DimensionLookup:
     _agent_map: dict | None
     _country_map: dict | None
     _group_map: dict | None
-    _zone_map: dict | None    
+    _zone_map: dict | None
     _region_map: dict | None
     _cust_division_map: dict | None
     _gamma_map: dict | None
@@ -39,6 +39,7 @@ class DimensionLookup:
         self._subfamily_map = None
         self._material_status_map = None
         self._vendor_map = None
+        self._production_area_map = None
 
     def invalidate_caches(self) -> None:
         self._customer_map = None
@@ -54,12 +55,18 @@ class DimensionLookup:
         self._division_map = None
         self._family_map = None
         self._subfamily_map = None
-        self._material_status_map = None    
+        self._material_status_map = None
         self._vendor_map = None
         self._material_map = None
+        self._production_area_map = None
 
     def invalidate_vendor_cache(self) -> None:
         self._vendor_map = None
+
+    def _load_production_areas(self) -> pd.DataFrame:
+        Logger().info("Cache --> Loading production areas from DB")
+        query = "SELECT PlantId, ProductionAreaCode, ProductionAreaId FROM ProductionAreaDim"
+        return pd.read_sql(query, self._con_dw)
 
     def _load_vendors(self) -> pd.DataFrame:
         Logger().info("Cache --> Loading vendors from DB")
@@ -103,7 +110,9 @@ class DimensionLookup:
 
     def _load_cust_divisions(self) -> pd.DataFrame:
         Logger().info("Cache --> Loading cust_divisions from DB")
-        cust_division_query = """SELECT CustDivisionId, CustDivisionCode FROM CustDivisionDim"""
+        cust_division_query = (
+            """SELECT CustDivisionId, CustDivisionCode FROM CustDivisionDim"""
+        )
         return pd.read_sql(cust_division_query, self._con_dw)
 
     def _load_gammas(self) -> pd.DataFrame:
@@ -118,7 +127,9 @@ class DimensionLookup:
 
     def _load_families(self) -> pd.DataFrame:
         Logger().info("Cache --> Loading families from DB")
-        family_query = "SELECT GammaCode, DivisionCode, FamilyCode, FamilyId FROM FAMILYDIM"
+        family_query = (
+            "SELECT GammaCode, DivisionCode, FamilyCode, FamilyId FROM FAMILYDIM"
+        )
         return pd.read_sql(family_query, self._con_dw)
 
     def _load_subfamilies(self) -> pd.DataFrame:
@@ -128,7 +139,9 @@ class DimensionLookup:
 
     def _load_material_statuses(self) -> pd.DataFrame:
         Logger().info("Cache --> Loading material statuses from DB")
-        status_query = "SELECT MaterialStatusId, MaterialStatusCode FROM MaterialStatusDim"
+        status_query = (
+            "SELECT MaterialStatusId, MaterialStatusCode FROM MaterialStatusDim"
+        )
         return pd.read_sql(status_query, self._con_dw)
 
     def get_customer_map(self) -> dict:
@@ -180,7 +193,7 @@ class DimensionLookup:
         )
 
         return self._agent_map
-    
+
     def get_country_map(self) -> dict:
         if self._country_map is not None:
             return self._country_map
@@ -192,7 +205,7 @@ class DimensionLookup:
             zip(df_country.CountryCode.values, df_country.CountryId.values)
         )
 
-        return self._country_map    
+        return self._country_map
 
     def get_group_map(self) -> dict:
         if self._group_map is not None:
@@ -201,11 +214,9 @@ class DimensionLookup:
         df_group: pd.DataFrame = self._load_groups()
 
         # Cache the map for reuse
-        self._group_map = dict(
-            zip(df_group.GroupCode.values, df_group.GroupId.values)
-        )
+        self._group_map = dict(zip(df_group.GroupCode.values, df_group.GroupId.values))
 
-        return self._group_map    
+        return self._group_map
 
     def get_zone_map(self) -> dict:
         if self._zone_map is not None:
@@ -214,11 +225,9 @@ class DimensionLookup:
         df_zone: pd.DataFrame = self._load_zones()
 
         # Cache the map for reuse
-        self._zone_map = dict(
-            zip(df_zone.ZoneCode.values, df_zone.ZoneId.values)
-        )
+        self._zone_map = dict(zip(df_zone.ZoneCode.values, df_zone.ZoneId.values))
 
-        return self._zone_map    
+        return self._zone_map
 
     def get_region_map(self) -> dict:
         if self._region_map is not None:
@@ -228,10 +237,13 @@ class DimensionLookup:
 
         # Cache the map for reuse
         self._region_map = dict(
-            zip((df_region.CountryId.astype(str) + df_region.RegionCode).values, df_region.RegionId.values)
+            zip(
+                (df_region.CountryId.astype(str) + df_region.RegionCode).values,
+                df_region.RegionId.values,
+            )
         )
 
-        return self._region_map    
+        return self._region_map
 
     def get_cust_division_map(self) -> dict:
         if self._cust_division_map is not None:
@@ -241,10 +253,13 @@ class DimensionLookup:
 
         # Cache the map for reuse
         self._cust_division_map = dict(
-            zip(df_cust_division.CustDivisionCode.values, df_cust_division.CustDivisionId.values)
+            zip(
+                df_cust_division.CustDivisionCode.values,
+                df_cust_division.CustDivisionId.values,
+            )
         )
 
-        return self._cust_division_map    
+        return self._cust_division_map
 
     def get_gamma_map(self) -> dict:
         if self._gamma_map is not None:
@@ -274,7 +289,9 @@ class DimensionLookup:
         df_family = self._load_families()
         self._family_map = dict(
             zip(
-                (df_family.GammaCode + df_family.DivisionCode + df_family.FamilyCode).values,
+                (
+                    df_family.GammaCode + df_family.DivisionCode + df_family.FamilyCode
+                ).values,
                 df_family.FamilyId.values,
             )
         )
@@ -313,7 +330,21 @@ class DimensionLookup:
             return self._vendor_map
 
         df_vendor = self._load_vendors()
-        self._vendor_map = dict(
-            zip(df_vendor.VendCode.values, df_vendor.VendId.values)
-        )
+        self._vendor_map = dict(zip(df_vendor.VendCode.values, df_vendor.VendId.values))
         return self._vendor_map
+
+    def get_production_area_map(self) -> dict:
+        if self._production_area_map is not None:
+            return self._production_area_map
+
+        df_areas = self._load_production_areas()
+
+        # Create composite key: PlantId + ProductionAreaCode
+        # Assuming PlantId is string. If not, cast it.
+        self._production_area_map = dict(
+            zip(
+                (df_areas.PlantId.astype(str) + df_areas.ProductionAreaCode).values,
+                df_areas.ProductionAreaId.values,
+            )
+        )
+        return self._production_area_map

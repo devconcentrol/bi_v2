@@ -22,6 +22,8 @@ from qm_sample_fact import QMSampleFactETL
 from customer_price_fact import CustomerPriceFactETL
 from sales_open_orders_fact import SalesOpenOrdersFactETL
 from planned_orders_qty_fact import PlannedOrdersQtyFactETL
+from production_data_fact import ProductionDataFactETL
+from production_orders_state_change_fact import ProductonOrdersStateChangeFactETL
 
 
 def main() -> None:
@@ -138,6 +140,20 @@ def main() -> None:
         )
         schedule.every().day.at("03:55").do(sales_open_orders_fact_processor.run)
         # sales_open_orders_fact_processor.run()
+
+        # # # Production Data Fact
+        production_data_fact_processor = ProductionDataFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
+        schedule.every().day.at("04:00").do(production_data_fact_processor.run)
+        # production_data_fact_processor.run()
+
+        # # # Production Orders State Change Fact
+        prod_orders_state_change_fact_processor = ProductonOrdersStateChangeFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
+        schedule.every().day.at("04:05").do(prod_orders_state_change_fact_processor.run)
+        # prod_orders_state_change_fact_processor.run()
 
         # # # Monitor Stock Fact
         monitor_stock_fact_processor = MonitorStockFactETL(

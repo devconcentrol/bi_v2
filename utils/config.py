@@ -50,6 +50,8 @@ class Config:
         self.TABLE_PLANNED_ORDERS_QTY_FACT = "ProcessOrderQtyFact"
         self.TABLE_SALES_OPEN_ORDERS_FACT = "SalesOpenOrdersFact"
         self.TABLE_SALES_OPEN_ORDERS_FACT_HIST = "SalesOpenOrdersFactHist"
+        self.TABLE_PRODUCTION_DATA_FACT = "ProductionDataFact"
+        self.TABLE_PRODUCTION_OF_STATE_CHANGE_FACT = "ProductionOFStateChangeFact"
 
         # Standard Constants
         self.DEFAULT_SALES_ORG = "1000"
