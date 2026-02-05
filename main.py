@@ -24,6 +24,7 @@ from sales_open_orders_fact import SalesOpenOrdersFactETL
 from planned_orders_qty_fact import PlannedOrdersQtyFactETL
 from production_data_fact import ProductionDataFactETL
 from production_orders_state_change_fact import ProductonOrdersStateChangeFactETL
+from availability_calculation import AvailabilityCalculationETL
 
 
 def main() -> None:
@@ -161,6 +162,15 @@ def main() -> None:
         )
         schedule.every().day.at("14:00").do(monitor_stock_fact_processor.run)
         # monitor_stock_fact_processor.run()
+
+        # # # Process availability calculation
+        availability_calculation_processor = AvailabilityCalculationETL(
+            con_datawarehouse, con_hana, lookup
+        )
+        schedule.every().day.at("03:55").do(availability_calculation_processor.run)
+        schedule.every().day.at("11:55").do(availability_calculation_processor.run)
+        schedule.every().day.at("19:55").do(availability_calculation_processor.run)
+        # availability_calculation_processor.run()
 
         while True:
             schedule.run_pending()
