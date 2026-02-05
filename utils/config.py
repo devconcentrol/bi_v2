@@ -52,6 +52,7 @@ class Config:
         self.TABLE_SALES_OPEN_ORDERS_FACT_HIST = "SalesOpenOrdersFactHist"
         self.TABLE_PRODUCTION_DATA_FACT = "ProductionDataFact"
         self.TABLE_PRODUCTION_OF_STATE_CHANGE_FACT = "ProductionOFStateChangeFact"
+        self.TABLE_AVAILABILITY_CALCULATION_FACT = "AvailabilityCalculation"
 
         # Standard Constants
         self.DEFAULT_SALES_ORG = "1000"

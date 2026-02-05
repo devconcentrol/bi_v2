@@ -9,6 +9,8 @@ from planned_orders_qty_fact import PlannedOrdersQtyFactETL
 from sales_open_orders_fact import SalesOpenOrdersFactETL
 from production_data_fact import ProductionDataFactETL
 from production_orders_state_change_fact import ProductonOrdersStateChangeFactETL
+from availability_calculation_fact import AvailabilityCalculationFactETL
+from sales_fact import SalesFactETL
 
 
 def main():
@@ -62,10 +64,19 @@ def main():
         # production_data_fact_processor.run()
 
         # Process Production Orders State Change Fact
-        prod_orders_state_change_fact_processor = ProductonOrdersStateChangeFactETL(
+        # prod_orders_state_change_fact_processor = ProductonOrdersStateChangeFactETL(
+        #     con_datawarehouse, con_hana, lookup
+        # )
+        # prod_orders_state_change_fact_processor.run()
+
+        # Process Sales Fact
+        # sales_fact_processor = SalesFactETL(con_datawarehouse, con_hana, lookup)
+        # sales_fact_processor.run()
+
+        availability_calculation_fact_processor = AvailabilityCalculationFactETL(
             con_datawarehouse, con_hana, lookup
         )
-        prod_orders_state_change_fact_processor.run()
+        availability_calculation_fact_processor.run()
 
     except Exception as e:
         Logger().error(f"Critical error in main: {e}")
