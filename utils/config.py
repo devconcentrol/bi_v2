@@ -53,6 +53,7 @@ class Config:
         self.TABLE_PRODUCTION_DATA_FACT = "ProductionDataFact"
         self.TABLE_PRODUCTION_OF_STATE_CHANGE_FACT = "ProductionOFStateChangeFact"
         self.TABLE_AVAILABILITY_CALCULATION_FACT = "AvailabilityCalculation"
+        self.TABLE_MATERIAL_REAL_PRICE_FACT = "MaterialRealPriceFact"
 
         # Standard Constants
         self.DEFAULT_SALES_ORG = "1000"

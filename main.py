@@ -25,6 +25,7 @@ from planned_orders_qty_fact import PlannedOrdersQtyFactETL
 from production_data_fact import ProductionDataFactETL
 from production_orders_state_change_fact import ProductonOrdersStateChangeFactETL
 from availability_calculation_fact import AvailabilityCalculationFactETL
+from material_real_price_fact import MaterialRealPriceFactETL
 
 
 def main() -> None:
@@ -155,6 +156,13 @@ def main() -> None:
         )
         schedule.every().day.at("04:05").do(prod_orders_state_change_fact_processor.run)
         # prod_orders_state_change_fact_processor.run()
+
+        # # # Material Real Price Fact
+        material_real_price_fact_processor = MaterialRealPriceFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
+        schedule.every().day.at("04:10").do(material_real_price_fact_processor.run)
+        # material_real_price_fact_processor.run()
 
         # # # Monitor Stock Fact
         monitor_stock_fact_processor = MonitorStockFactETL(
