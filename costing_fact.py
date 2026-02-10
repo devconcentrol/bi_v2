@@ -10,7 +10,7 @@ from utils.config import Config
 
 
 class CostingFactETL:
-    def __init__(self, engine: Engine, lookup: DimensionLookup):        
+    def __init__(self, engine: Engine, lookup: DimensionLookup):
         self._engine: Engine = engine
         self._lookup: DimensionLookup = lookup
         self._config = Config.get_instance()
@@ -60,8 +60,10 @@ class CostingFactETL:
                 ],
             )
 
-            # 2. Transform Data            
-            df["CostingDate"] = pd.to_datetime(df["CostingDate"], format="%Y%m%d", errors="coerce").dt.date
+            # 2. Transform Data
+            df["CostingDate"] = pd.to_datetime(
+                df["CostingDate"], format="%Y%m%d", errors="coerce"
+            ).dt.date
 
             # Map Customers
             df["CustKey"] = (
@@ -73,6 +75,9 @@ class CostingFactETL:
             df["CustId"] = df["CustKey"].map(customer_map)
 
             # Map Materials
+            df["MaterialCode"] = (
+                df["MaterialCode"].astype(str).str.replace("1000A", "MA")
+            )
             df["MaterialId"] = df["MaterialCode"].astype(str).map(material_map)
 
             # Handle missing IDs
@@ -107,7 +112,10 @@ class CostingFactETL:
                 f"Uploading {len(df_upload)} rows from {os.path.basename(file_path)}..."
             )
             df_upload.to_sql(
-                self._config.TABLE_COSTING_FACT, self._engine, if_exists="append", index=False
+                self._config.TABLE_COSTING_FACT,
+                self._engine,
+                if_exists="append",
+                index=False,
             )
 
             # 4. Move to loaded
@@ -122,4 +130,4 @@ class CostingFactETL:
             f"UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() WHERE ETL = 'process_costing'"
         )
         with self._engine.begin() as conn:
-            conn.execute(stmt_update_etl)            
+            conn.execute(stmt_update_etl)

@@ -12,6 +12,7 @@ from production_orders_state_change_fact import ProductonOrdersStateChangeFactET
 from availability_calculation_fact import AvailabilityCalculationFactETL
 from sales_fact import SalesFactETL
 from material_real_price_fact import MaterialRealPriceFactETL
+from regularization_fact import RegularizationFactETL
 
 
 def main():
@@ -79,10 +80,15 @@ def main():
         # )
         # availability_calculation_fact_processor.run()
 
-        material_real_price_fact_processor = MaterialRealPriceFactETL(
+        # material_real_price_fact_processor = MaterialRealPriceFactETL(
+        #     con_datawarehouse, con_hana, lookup
+        # )
+        # material_real_price_fact_processor.run()
+
+        regularization_fact_processor = RegularizationFactETL(
             con_datawarehouse, con_hana, lookup
         )
-        material_real_price_fact_processor.run()
+        regularization_fact_processor.run()
 
     except Exception as e:
         Logger().error(f"Critical error in main: {e}")
