@@ -18,6 +18,7 @@ from sqlalchemy import (
 class RegularizationFactETL(BaseFactETL):
     COLUMN_MAPPING = {
         "werks": "PlantId",
+        "lgort": "StorageLocation",
         "MaterialId": "MaterialId",
         "RegularizationDate": "RegularizationDate",
         "menge": "Qty",
@@ -40,7 +41,8 @@ class RegularizationFactETL(BaseFactETL):
         cutoff_date_sap = cutoff_date.strftime("%Y%m%d")
 
         sql_get_regularization = """
-                            SELECT WERKS,                                                                                                                                            
+                            SELECT WERKS, 
+                                   LGORT,
                                    MATNR,                                   
                                    MEINS,
                                    BUDAT_MKPF,
@@ -82,6 +84,7 @@ class RegularizationFactETL(BaseFactETL):
             Column("CreatedUser", String(100)),
             Column("QtyKg", DECIMAL(15, 4)),
             Column("ProductionOrderNumber", String(15)),
+            Column("StorageLocation", String(15)),
         )
 
         # Vectorized Date Parsing
