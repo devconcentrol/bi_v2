@@ -13,6 +13,7 @@ from availability_calculation_fact import AvailabilityCalculationFactETL
 from sales_fact import SalesFactETL
 from material_real_price_fact import MaterialRealPriceFactETL
 from regularization_fact import RegularizationFactETL
+from ewm_task_fact import EWMTasksFactETL
 
 
 def main():
@@ -85,10 +86,13 @@ def main():
         # )
         # material_real_price_fact_processor.run()
 
-        regularization_fact_processor = RegularizationFactETL(
-            con_datawarehouse, con_hana, lookup
-        )
-        regularization_fact_processor.run()
+        # regularization_fact_processor = RegularizationFactETL(
+        #     con_datawarehouse, con_hana, lookup
+        # )
+        # regularization_fact_processor.run()
+
+        ewm_tasks_fact_processor = EWMTasksFactETL(con_datawarehouse, con_hana, lookup)
+        ewm_tasks_fact_processor.run()
 
     except Exception as e:
         Logger().error(f"Critical error in main: {e}")

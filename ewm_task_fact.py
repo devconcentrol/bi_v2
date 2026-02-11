@@ -45,13 +45,12 @@ class EWMTasksFactETL(BaseFactETL):
         "nlber": "Area",
         "prod_order": "ProductionOrder",
         "tostat": "Status",
+        "MaterialId": "MaterialId",
+        "ConfirmedDate": "ConfirmedDate",
+        "ConfirmedTime": "ConfirmedTime",
+        "CreatedDate": "CreatedDate",
+        "CreatedTime": "CreatedTime",
     }
-
-    def __init__(self, con_dw: Engine, con_sap: Engine, lookup: DimensionLookup):
-        self._con_dw: Engine = con_dw
-        self._con_sap: Engine = con_sap
-        self._lookup: DimensionLookup = lookup
-        self._config = Config.get_instance()
 
     @error_handler
     def run(self) -> None:
@@ -59,10 +58,10 @@ class EWMTasksFactETL(BaseFactETL):
         # Date calculation in Python: 1 months ago from the start of the current month
         today = date.today()
         first_day_this_month = today.replace(day=1)
-        filter_date = (first_day_this_month - timedelta(days=1)).replace(day=1) 
+        filter_date = (first_day_this_month - timedelta(days=1)).replace(day=1)
         filter_date_sap = filter_date.strftime("%Y%m%d")
 
-        sql_get_tasks = f"""
+        sql_get_tasks = """
                             SELECT WHO,
                                    TANUM,
                                    HDR_PROCTY,
@@ -90,7 +89,11 @@ class EWMTasksFactETL(BaseFactETL):
                             FROM SAPSR3.ZCON_EWM_TASK                             
                             WHERE FILTER_CREATE_DATE >= :filter_date_sap
                         """
-        results: pd.DataFrame = pd.read_sql(sql_get_tasks, con=self._con_sap, params={"filter_date_sap": filter_date_sap}   )
+        results: pd.DataFrame = pd.read_sql(
+            sql_get_tasks,
+            con=self._con_sap,
+            params={"filter_date_sap": filter_date_sap},
+        )
 
         if results.empty:
             Logger().info("No EWM tasks found.")
@@ -105,8 +108,8 @@ class EWMTasksFactETL(BaseFactETL):
             results.sort_values(["who", "prod_order"], ascending=False)
             .groupby("who")["prod_order"]
             .transform("first")
-        )        
-    
+        )
+
         # Vectorized mapping for MaterialId
         material_map = self._lookup.get_material_map()
         results["MaterialId"] = results["matnr"].map(material_map)
@@ -121,8 +124,12 @@ class EWMTasksFactETL(BaseFactETL):
 
         results = results.rename(columns=self.COLUMN_MAPPING)
 
-        final_cols = list(self.COLUMN_MAPPING.values())            
-        insert_data = results[final_cols].where(pd.notnull(results), None).to_dict(orient="records")
+        final_cols = list(self.COLUMN_MAPPING.values())
+        insert_data = (
+            results[final_cols]
+            .where(pd.notnull(results), None)
+            .to_dict(orient="records")
+        )
 
         # Define the table for insertion
         metadata: MetaData = MetaData()
