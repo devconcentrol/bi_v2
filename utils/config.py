@@ -55,6 +55,8 @@ class Config:
         self.TABLE_AVAILABILITY_CALCULATION_FACT = "AvailabilityCalculation"
         self.TABLE_MATERIAL_REAL_PRICE_FACT = "MaterialRealPriceFact"
         self.TABLE_REGULARIZATION_FACT = "RegularizationFact"
+        self.TABLE_CONSUMPTION_FACT = "ConsumptionFact"
+        self.TABLE_CONSUMPTION_CECO_FACT = "ConsumptionCeCoFact"
 
         # Standard Constants
         self.DEFAULT_SALES_ORG = "1000"

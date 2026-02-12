@@ -27,6 +27,8 @@ from production_orders_state_change_fact import ProductonOrdersStateChangeFactET
 from availability_calculation_fact import AvailabilityCalculationFactETL
 from material_real_price_fact import MaterialRealPriceFactETL
 from regularization_fact import RegularizationFactETL
+from consumption_fact import ConsumptionFactETL
+from consumption_ceco_fact import ConsumptionCeCoFactETL
 
 
 def main() -> None:
@@ -171,6 +173,20 @@ def main() -> None:
         )
         schedule.every().day.at("04:15").do(regularization_fact_processor.run)
         # regularization_fact_processor.run()
+
+        # # # Consumption Fact
+        consumption_fact_processor = ConsumptionFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
+        schedule.every().day.at("04:20").do(consumption_fact_processor.run)
+        # consumption_fact_processor.run()
+
+        # # # Consumption CeCo Fact
+        consumption_ceco_fact_processor = ConsumptionCeCoFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
+        schedule.every().day.at("04:25").do(consumption_ceco_fact_processor.run)
+        # consumption_ceco_fact_processor.run()
 
         # # # Monitor Stock Fact
         monitor_stock_fact_processor = MonitorStockFactETL(
