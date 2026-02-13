@@ -16,6 +16,7 @@ from regularization_fact import RegularizationFactETL
 from ewm_task_fact import EWMTasksFactETL
 from consumption_fact import ConsumptionFactETL
 from consumption_ceco_fact import ConsumptionCeCoFactETL
+from sample_delivery_fact import SampleDeliveryFactETL
 
 
 def main():
@@ -96,15 +97,20 @@ def main():
         # ewm_tasks_fact_processor = EWMTasksFactETL(con_datawarehouse, con_hana, lookup)
         # ewm_tasks_fact_processor.run()
 
-        consumption_fact_processor = ConsumptionFactETL(
-            con_datawarehouse, con_hana, lookup
-        )
-        consumption_fact_processor.run()
+        # consumption_fact_processor = ConsumptionFactETL(
+        #     con_datawarehouse, con_hana, lookup
+        # )
+        # consumption_fact_processor.run()
 
-        consumption_ceco_fact_processor = ConsumptionCeCoFactETL(
+        # consumption_ceco_fact_processor = ConsumptionCeCoFactETL(
+        #     con_datawarehouse, con_hana, lookup
+        # )
+        # consumption_ceco_fact_processor.run()
+
+        sample_delivery_fact_processor = SampleDeliveryFactETL(
             con_datawarehouse, con_hana, lookup
         )
-        consumption_ceco_fact_processor.run()
+        sample_delivery_fact_processor.run()
 
     except Exception as e:
         Logger().error(f"Critical error in main: {e}")

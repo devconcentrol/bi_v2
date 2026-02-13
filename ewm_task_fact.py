@@ -1,16 +1,14 @@
 import pandas as pd
+from pandas._libs import Timestamp
 from datetime import date, timedelta
 from zoneinfo import ZoneInfo
-from utils.dimension_lookup import DimensionLookup
 from utils.error_handler import error_handler
 from utils.logger import Logger
-from utils.config import Config
 from sqlalchemy import (
     MetaData,
     Table,
     Column,
     String,
-    Engine,
     insert,
     text,
     Integer,
@@ -98,7 +96,7 @@ class EWMTasksFactETL(BaseFactETL):
         if results.empty:
             Logger().info("No EWM tasks found.")
             with self._con_dw.connect() as conn:
-                self.update_etl_info(conn, "process_ewm_tasks")
+                self._update_etl_info(conn, "process_ewm_tasks")
             return
 
         # normalize column names to lowercase to make downstream accesses predictable

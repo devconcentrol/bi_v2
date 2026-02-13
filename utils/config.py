@@ -57,6 +57,7 @@ class Config:
         self.TABLE_REGULARIZATION_FACT = "RegularizationFact"
         self.TABLE_CONSUMPTION_FACT = "ConsumptionFact"
         self.TABLE_CONSUMPTION_CECO_FACT = "ConsumptionCeCoFact"
+        self.TABLE_SAMPLE_DELIVERY_FACT = "SampleDeliveryFact"
 
         # Standard Constants
         self.DEFAULT_SALES_ORG = "1000"
