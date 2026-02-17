@@ -119,6 +119,7 @@ class SampleDeliveryFactETL(BaseFactETL):
             sql_get_deliveries,
             con=self._con_sap,
             params={"yesterday": yesterday_sap},
+            dtype_backend="numpy_nullable",
         )
 
         if results.empty and not ids_to_delete:
@@ -142,20 +143,20 @@ class SampleDeliveryFactETL(BaseFactETL):
             # Using object dtype to ensure mixed types (date and None) are handled correctly
 
             results["wadat"] = pd.to_datetime(
-                results["wadat"], format="%Y%m%d", errors="coerce"
-            ).dt.date.replace({pd.NaT: None})
+                results["wadat"], errors="coerce"
+            ).dt.strftime("%Y-%m-%d")
 
             results["wadat_ist"] = pd.to_datetime(
-                results["wadat_ist"], format="%Y%m%d", errors="coerce"
-            ).dt.date.replace({pd.NaT: None})
+                results["wadat_ist"], errors="coerce"
+            ).dt.strftime("%Y-%m-%d")
 
             results["erdat"] = pd.to_datetime(
-                results["erdat"], format="%Y%m%d", errors="coerce"
-            ).dt.date.replace({pd.NaT: None})
+                results["erdat"], errors="coerce"
+            ).dt.strftime("%Y-%m-%d")
 
             results["aedat"] = pd.to_datetime(
-                results["aedat"], format="%Y%m%d", errors="coerce"
-            ).dt.date.replace({pd.NaT: None})
+                results["aedat"], errors="coerce"
+            ).dt.strftime("%Y-%m-%d")
 
             results["lfimg"] = pd.to_numeric(results["lfimg"], errors="coerce").fillna(
                 0
