@@ -138,18 +138,24 @@ class SampleDeliveryFactETL(BaseFactETL):
                 ids_to_delete.update(results["salesid"].astype(str).dropna().tolist())
 
             # Data Transformations
+            # Date conversions with explicit NaT -> None handling to avoid strftime errors
+            # Using object dtype to ensure mixed types (date and None) are handled correctly
+
             results["wadat"] = pd.to_datetime(
                 results["wadat"], format="%Y%m%d", errors="coerce"
-            ).dt.date
+            ).dt.date.replace({pd.NaT: None})
+
             results["wadat_ist"] = pd.to_datetime(
                 results["wadat_ist"], format="%Y%m%d", errors="coerce"
-            ).dt.date
+            ).dt.date.replace({pd.NaT: None})
+
             results["erdat"] = pd.to_datetime(
                 results["erdat"], format="%Y%m%d", errors="coerce"
-            ).dt.date
+            ).dt.date.replace({pd.NaT: None})
+
             results["aedat"] = pd.to_datetime(
                 results["aedat"], format="%Y%m%d", errors="coerce"
-            ).dt.date
+            ).dt.date.replace({pd.NaT: None})
 
             results["lfimg"] = pd.to_numeric(results["lfimg"], errors="coerce").fillna(
                 0
@@ -201,8 +207,11 @@ class SampleDeliveryFactETL(BaseFactETL):
 
             # Select final columns
             final_cols = list(self.COLUMN_MAPPING.values())
-            # Ensure we only pick columns that exist (though they should all exist after rename/calculation)
-            insert_df = results[final_cols].where(pd.notnull(results[final_cols]), None)
+
+            # Final safety check: Replace any remaining NaT values in the DataFrame before conversion
+            insert_df = results[final_cols].replace({pd.NaT: None})
+            insert_df = insert_df.where(pd.notnull(insert_df), None)
+
             insert_records = insert_df.to_dict(orient="records")
 
         # ---------------------------------------------------------

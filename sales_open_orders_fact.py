@@ -96,7 +96,7 @@ class SalesOpenOrdersFactETL(BaseFactETL):
                 # SAP dates are YYYYMMDD. "00000000" or invalid becomes NaT.
                 results[col] = pd.to_datetime(
                     results[col], format="%Y%m%d", errors="coerce"
-                ).dt.date
+                ).dt.date.replace({pd.NaT: None})
 
         # Prepare Keys for Lookups
         # Ensure string types for key components
