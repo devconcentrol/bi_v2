@@ -18,6 +18,7 @@ from consumption_fact import ConsumptionFactETL
 from consumption_ceco_fact import ConsumptionCeCoFactETL
 from sample_delivery_fact import SampleDeliveryFactETL
 from sales_delivery_date_change_fact import SalesDeliveryDateChangeFactETL
+from purchase_pending_orders_fact import PurchasePendingOrdersFactETL
 
 
 def main():
@@ -113,10 +114,15 @@ def main():
         # )
         # sample_delivery_fact_processor.run()
 
-        sales_delivery_date_change_fact_processor = SalesDeliveryDateChangeFactETL(
+        # sales_delivery_date_change_fact_processor = SalesDeliveryDateChangeFactETL(
+        #     con_datawarehouse, con_hana, lookup
+        # )
+        # sales_delivery_date_change_fact_processor.run()
+
+        purchase_pending_orders_fact_processor = PurchasePendingOrdersFactETL(
             con_datawarehouse, con_hana, lookup
         )
-        sales_delivery_date_change_fact_processor.run()
+        purchase_pending_orders_fact_processor.run()
 
     except Exception as e:
         Logger().error(f"Critical error in main: {e}")

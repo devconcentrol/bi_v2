@@ -59,6 +59,7 @@ class Config:
         self.TABLE_CONSUMPTION_CECO_FACT = "ConsumptionCeCoFact"
         self.TABLE_SAMPLE_DELIVERY_FACT = "SampleDeliveryFact"
         self.TABLE_SALES_DATE_CHANGE_FACT = "SalesDateChangeFact"
+        self.TABLE_PENDING_ORDERS_FACT = "PendingOrdersFact"
 
         # Standard Constants
         self.DEFAULT_SALES_ORG = "1000"
