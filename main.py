@@ -30,6 +30,7 @@ from regularization_fact import RegularizationFactETL
 from consumption_fact import ConsumptionFactETL
 from consumption_ceco_fact import ConsumptionCeCoFactETL
 from sample_delivery_fact import SampleDeliveryFactETL
+from sales_delivery_date_change_fact import SalesDeliveryDateChangeFactETL
 
 
 def main() -> None:
@@ -49,28 +50,25 @@ def main() -> None:
 
         # Initialize dimension lookup
         lookup = DimensionLookup(con_datawarehouse)
-        schedule.every().day.at("01:00").do(lookup.invalidate_caches)
 
         # # Process Agents
         agent_dim_processor = AgentDim(con_datawarehouse, con_hana, lookup)
-        schedule.every().day.at("01:05").do(agent_dim_processor.run)
-        # agent_dim_processor.run()
+        schedule.every().day.at("01:00").do(agent_dim_processor.run)
 
         customer_dim_processor = CustomerDim(con_datawarehouse, con_hana, lookup)
-        schedule.every().day.at("01:10").do(customer_dim_processor.run)
-        # customer_dim_processor.run()
+        schedule.every().day.at("01:05").do(customer_dim_processor.run)
 
         material_dim_processor = MaterialDim(con_datawarehouse, con_hana, lookup)
-        schedule.every().day.at("01:15").do(material_dim_processor.run)
-        # material_dim_processor.run()
+        schedule.every().day.at("01:10").do(material_dim_processor.run)
 
         vendor_dim_processor = VendorDim(con_datawarehouse, con_hana, lookup)
-        schedule.every().day.at("01:20").do(vendor_dim_processor.run)
-        # vendor_dim_processor.run()
+        schedule.every().day.at("01:15").do(vendor_dim_processor.run)
 
         contact_dim_processor = ContactDim(con_datawarehouse, con_hana, lookup)
-        schedule.every().day.at("01:25").do(contact_dim_processor.run)
-        # contact_dim_processor.run()
+        schedule.every().day.at("01:20").do(contact_dim_processor.run)
+
+        # DimensionLookup invalidate caché after new dimensions loaded.
+        schedule.every().day.at("01:25").do(lookup.invalidate_caches)
 
         # # Process Costing Fact
         costing_fact_processor = CostingFactETL(con_datawarehouse, lookup)
@@ -79,129 +77,118 @@ def main() -> None:
         # # EWM Tasks
         ewm_tasks_fact_processor = EWMTasksFactETL(con_datawarehouse, con_hana, lookup)
         schedule.every().day.at("03:00").do(ewm_tasks_fact_processor.run)
-        # ewm_tasks_fact_processor.run()
 
         # # Extended Stock
         extended_stock_fact_processor = ExtendedStockFactETL(
             con_datawarehouse, con_hana, lookup
         )
         schedule.every().day.at("03:05").do(extended_stock_fact_processor.run)
-        # extended_stock_fact_processor.run()
 
         # # Sales Fact
         sales_fact_processor = SalesFactETL(con_datawarehouse, con_hana, lookup)
         schedule.every().day.at("03:10").do(sales_fact_processor.run)
-        # sales_fact_processor.run()
 
         # # # Extended Batch Stock
         extended_batch_stock_fact_processor = ExtendedBatchStockFactETL(
             con_datawarehouse, con_hana, lookup
         )
         schedule.every().day.at("03:15").do(extended_batch_stock_fact_processor.run)
-        # extended_batch_stock_fact_processor.run()
 
         # # # QM Adjustment Fact
         qm_adjustment_fact_processor = QMAdjustmentFactETL(
             con_datawarehouse, con_hana, lookup
         )
         schedule.every().day.at("03:25").do(qm_adjustment_fact_processor.run)
-        # qm_adjustment_fact_processor.run()
 
         # # # QM Notification Fact
         qm_notification_fact_processor = QMNotificationFactETL(
             con_datawarehouse, con_hana, lookup
         )
         schedule.every().day.at("03:30").do(qm_notification_fact_processor.run)
-        # qm_notification_fact_processor.run()
 
         # # # # QM Sample Fact
         qm_sample_fact_processor = QMSampleFactETL(con_datawarehouse, con_hana, lookup)
         schedule.every().day.at("03:35").do(qm_sample_fact_processor.run)
-        # qm_sample_fact_processor.run()
 
         # # # QM Inspection Lot Fact
         qm_inspection_lot_fact_processor = QMInspectionLotFactETL(
             con_datawarehouse, con_hana, lookup
         )
         schedule.every().day.at("03:40").do(qm_inspection_lot_fact_processor.run)
-        # qm_inspection_lot_fact_processor.run()
 
         # # # # Customer Price Fact
         customer_price_fact_processor = CustomerPriceFactETL(
             con_datawarehouse, con_hana, lookup
         )
         schedule.every().day.at("03:45").do(customer_price_fact_processor.run)
-        # customer_price_fact_processor.run()
 
         # # # Planned Orders Qty Fact
         planned_orders_qty_fact_processor = PlannedOrdersQtyFactETL(
             con_datawarehouse, con_hana, lookup
         )
         schedule.every().day.at("03:50").do(planned_orders_qty_fact_processor.run)
-        # planned_orders_qty_fact_processor.run()
 
         # # # Sales Open Orders Fact
         sales_open_orders_fact_processor = SalesOpenOrdersFactETL(
             con_datawarehouse, con_hana, lookup
         )
         schedule.every().day.at("03:55").do(sales_open_orders_fact_processor.run)
-        # sales_open_orders_fact_processor.run()
 
         # # # Production Data Fact
         production_data_fact_processor = ProductionDataFactETL(
             con_datawarehouse, con_hana, lookup
         )
         schedule.every().day.at("04:00").do(production_data_fact_processor.run)
-        # production_data_fact_processor.run()
 
         # # # Production Orders State Change Fact
         prod_orders_state_change_fact_processor = ProductonOrdersStateChangeFactETL(
             con_datawarehouse, con_hana, lookup
         )
         schedule.every().day.at("04:05").do(prod_orders_state_change_fact_processor.run)
-        # prod_orders_state_change_fact_processor.run()
 
         # # # Material Real Price Fact
         material_real_price_fact_processor = MaterialRealPriceFactETL(
             con_datawarehouse, con_hana, lookup
         )
         schedule.every().day.at("04:10").do(material_real_price_fact_processor.run)
-        # material_real_price_fact_processor.run()
 
         # # # Regularization Fact
         regularization_fact_processor = RegularizationFactETL(
             con_datawarehouse, con_hana, lookup
         )
         schedule.every().day.at("04:15").do(regularization_fact_processor.run)
-        # regularization_fact_processor.run()
 
         # # # Consumption Fact
         consumption_fact_processor = ConsumptionFactETL(
             con_datawarehouse, con_hana, lookup
         )
         schedule.every().day.at("04:20").do(consumption_fact_processor.run)
-        # consumption_fact_processor.run()
 
         # # # Consumption CeCo Fact
         consumption_ceco_fact_processor = ConsumptionCeCoFactETL(
             con_datawarehouse, con_hana, lookup
         )
         schedule.every().day.at("04:25").do(consumption_ceco_fact_processor.run)
-        # consumption_ceco_fact_processor.run()
 
         # # # Sample Delivery Fact
         sample_delivery_fact_processor = SampleDeliveryFactETL(
             con_datawarehouse, con_hana, lookup
         )
         schedule.every().day.at("04:30").do(sample_delivery_fact_processor.run)
-        # sample_delivery_fact_processor.run()
+
+        # # # Sales Delivery Date Change Fact
+        sales_delivery_date_change_fact_processor = SalesDeliveryDateChangeFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
+        schedule.every().day.at("04:35").do(
+            sales_delivery_date_change_fact_processor.run
+        )
 
         # # # Monitor Stock Fact
         monitor_stock_fact_processor = MonitorStockFactETL(
             con_datawarehouse, con_hana, lookup
         )
         schedule.every().day.at("14:00").do(monitor_stock_fact_processor.run)
-        # monitor_stock_fact_processor.run()
 
         # # # Process availability calculation
         availability_calculation_fact_processor = AvailabilityCalculationFactETL(

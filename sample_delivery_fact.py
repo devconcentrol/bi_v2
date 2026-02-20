@@ -146,9 +146,11 @@ class SampleDeliveryFactETL(BaseFactETL):
                 results["wadat"], errors="coerce"
             ).dt.strftime("%Y-%m-%d")
 
-            results["wadat_ist"] = pd.to_datetime(
-                results["wadat_ist"], errors="coerce"
-            ).dt.strftime("%Y-%m-%d")
+            results["wadat_ist"] = (
+                pd.to_datetime(results["wadat_ist"], errors="coerce", format="%Y%m%d")
+                .dt.strftime("%Y-%m-%d")
+                .convert_dtypes()
+            )
 
             results["erdat"] = pd.to_datetime(
                 results["erdat"], errors="coerce"
@@ -208,12 +210,7 @@ class SampleDeliveryFactETL(BaseFactETL):
 
             # Select final columns
             final_cols = list(self.COLUMN_MAPPING.values())
-
-            # Final safety check: Replace any remaining NaT values in the DataFrame before conversion
-            insert_df = results[final_cols].replace({pd.NaT: None})
-            insert_df = insert_df.where(pd.notnull(insert_df), None)
-
-            insert_records = insert_df.to_dict(orient="records")
+            insert_records = results[final_cols].to_dict(orient="records")
 
         # ---------------------------------------------------------
         # 3. Commit Changes
