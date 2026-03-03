@@ -50,6 +50,7 @@ class CostingFactETL:
                 names=[
                     "CostingDate",
                     "CustomerCode",
+                    "Channel",
                     "MaterialCode",
                     "SalesOrganization",
                     "NetWeight",
@@ -57,6 +58,7 @@ class CostingFactETL:
                     "TotalCOGS",
                     "Transport",
                     "Commission",
+                    "InvoiceDiscount",
                 ],
             )
 
@@ -65,14 +67,26 @@ class CostingFactETL:
                 df["CostingDate"], format="%Y%m%d", errors="coerce"
             ).dt.date
 
+            df["InvoiceDiscount"] = df["InvoiceDiscount"].fillna(0)
+            df["Channel"] = df["Channel"].fillna(self._config.DEFAULT_CHANNEL)
+
             # Map Customers
             df["CustKey"] = (
+                df["SalesOrganization"].astype(str)
+                + df["Channel"].astype(str)
+                + self._config.DEFAULT_DIVISION
+                + df["CustomerCode"].astype(str)
+            )
+            df["CustId"] = df["CustKey"].map(customer_map)
+
+            df["CustKey2"] = (
                 df["SalesOrganization"].astype(str)
                 + self._config.DEFAULT_CHANNEL
                 + self._config.DEFAULT_DIVISION
                 + df["CustomerCode"].astype(str)
             )
-            df["CustId"] = df["CustKey"].map(customer_map)
+            df["CustId_Fallback"] = df["CustKey2"].map(customer_map)
+            df["CustId"] = df["CustId"].fillna(df["CustId_Fallback"])
 
             # Map Materials
             df["MaterialCode"] = (
@@ -99,11 +113,13 @@ class CostingFactETL:
                 "CustId",
                 "MaterialId",
                 "SalesOrganization",
+                "Channel",
                 "NetWeight",
                 "TotalIncome",
                 "TotalCOGS",
                 "Transport",
                 "Commission",
+                "InvoiceDiscount",
             ]
             df_upload = df[final_cols].copy()
 
