@@ -139,6 +139,13 @@ class PurchasePendingOrdersFactETL(BaseFactETL):
         vendor_map = self._lookup.get_vendor_map()
 
         results["MaterialId"] = results["matnr"].map(material_map)
+        missing_materials = results[results["MaterialId"].isna()]
+        if not missing_materials.empty:
+            Logger().warning(
+                f"Dropped {len(missing_materials)} rows due to missing MaterialId."
+            )
+            results = results[results["MaterialId"].notna()]
+
         results["VendId"] = (
             results["lifnr"]
             .astype(str)
