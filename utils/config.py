@@ -60,6 +60,7 @@ class Config:
         self.TABLE_SAMPLE_DELIVERY_FACT = "SampleDeliveryFact"
         self.TABLE_SALES_DATE_CHANGE_FACT = "SalesDateChangeFact"
         self.TABLE_PENDING_ORDERS_FACT = "PendingOrdersFact"
+        self.TABLE_EWM_LOCATIONS_FACT = "EWMLocationFact"
 
         # Standard Constants
         self.DEFAULT_SALES_ORG = "1000"

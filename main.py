@@ -11,6 +11,7 @@ from dimensions.vendor_dim import VendorDim
 from dimensions.contact_dim import ContactDim
 from costing_fact import CostingFactETL
 from ewm_task_fact import EWMTasksFactETL
+from ewm_locations_fact import EWMLocationsFactETL
 from extended_stock_fact import ExtendedStockFactETL
 from sales_fact import SalesFactETL
 from extended_batch_stock_fact import ExtendedBatchStockFactETL
@@ -78,6 +79,12 @@ def main() -> None:
         # # EWM Tasks
         ewm_tasks_fact_processor = EWMTasksFactETL(con_datawarehouse, con_hana, lookup)
         schedule.every().day.at("03:00").do(ewm_tasks_fact_processor.run)
+
+        # # EWM Locations
+        ewm_locations_fact_processor = EWMLocationsFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
+        schedule.every().day.at("03:02").do(ewm_locations_fact_processor.run)
 
         # # Extended Stock
         extended_stock_fact_processor = ExtendedStockFactETL(
