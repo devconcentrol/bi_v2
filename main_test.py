@@ -55,7 +55,7 @@ def main():
         # customer_price_fact_processor.run()
 
         # Process Planned Orders Qty Fact
-        # planned_orders_qty_fact_processor = PlannedOrdersQtyFactETL(
+        # planned_orders_qty_fact_processor = PlannedOrdersQqtyFactETL(
         #     con_datawarehouse, con_hana, lookup
         # )
         # planned_orders_qty_fact_processor.run()

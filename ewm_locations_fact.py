@@ -31,11 +31,12 @@ class EWMLocationsFactETL(BaseFactETL):
         "IsBlockedForPutAway": "IsBlockedForPutAway",
         "MovedAt": "MovedAt",
         "MovedTime": "MovedTime",
-        "MaterialId": "MaterialId",
-        "charg": "Batch",
-        "vsolm": "Qty",
-        "meins": "UnitId",
         "FactDate": "FactDate",
+        "vlenr": "UMP",
+        "MaterialId": "MaterialId",
+        "charg": "BatchNumber",
+        "quan": "Qty",
+        "unit": "UnitId",
     }
 
     @error_handler
@@ -55,8 +56,9 @@ class EWMLocationsFactETL(BaseFactETL):
 	               MOVED_AT, --Datetime confirmación con UTC aplicada,                   
                    MATNR,
                    CHARG,
-                   VSOLM,
-                   MEINS
+                   QUAN,
+                   UNIT,
+                   VLENR -- Ump
             FROM SAPSR3.ZCON_V_EWM_LOCATIONS
         """
 
@@ -77,6 +79,9 @@ class EWMLocationsFactETL(BaseFactETL):
         material_map = self._lookup.get_material_map()
         results["matnr"] = results["matnr"].astype(str)
         results["MaterialId"] = results["matnr"].map(material_map).convert_dtypes()
+        missing_materials = results[results["MaterialId"].isna()]["matnr"].unique()
+        if len(missing_materials) > 0:
+            print(f"Missing material codes : {missing_materials}")
 
         results["IsEmpty"] = results["kzler"] == "X"
         results["IsFull"] = results["kzvol"] == "X"
@@ -111,7 +116,7 @@ class EWMLocationsFactETL(BaseFactETL):
         results["FactDate"] = date.today()
 
         # Ensure numeric Qty
-        results["vsolm"] = pd.to_numeric(results["vsolm"], errors="coerce").fillna(0)
+        results["quan"] = pd.to_numeric(results["quan"], errors="coerce").fillna(0)
 
         # Rename columns based on mapping
         results = results.rename(columns=self.COLUMN_MAPPING)
@@ -129,9 +134,11 @@ class EWMLocationsFactETL(BaseFactETL):
         ewm_locations_table: Table = Table(
             self._config.TABLE_EWM_LOCATIONS_FACT,
             metadata,
+            Column("FactDate", Date),
             Column("WarehouseNumber", String(10)),
             Column("StorageType", String(10)),
             Column("StorageBin", String(25)),
+            Column("UMP", String(100)),
             Column("IsEmpty", String(1)),
             Column("IsFull", String(1)),
             Column("LastTask", String(15)),
@@ -140,18 +147,14 @@ class EWMLocationsFactETL(BaseFactETL):
             Column("MovedAt", Date),
             Column("MovedTime", Time),
             Column("MaterialId", Integer),
-            Column("Batch", String(25)),
+            Column("BatchNumber", String(25)),
             Column("Qty", DECIMAL(15, 4)),
             Column("UnitId", String(10)),
-            Column("FactDate", Date),
         )
-
-        # Truncate and Insert strategy
-        stmt_truncate = text(f"TRUNCATE TABLE {self._config.TABLE_EWM_LOCATIONS_FACT}")
 
         with self._con_dw.begin() as conn:
             Logger().info(f"Inserting {len(insert_data)} EWM locations...")
-            conn.execute(stmt_truncate)
             if insert_data:
                 conn.execute(insert(ewm_locations_table), insert_data)  # type: ignore
+
             self._update_etl_info(conn, "process_ewm_locations")
