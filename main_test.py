@@ -20,6 +20,7 @@ from sample_delivery_fact import SampleDeliveryFactETL
 from sales_delivery_date_change_fact import SalesDeliveryDateChangeFactETL
 from purchase_pending_orders_fact import PurchasePendingOrdersFactETL
 from ewm_locations_fact import EWMLocationsFactETL
+from forecast_consumptions_fact import ForecastConsumptionsFactETL
 
 
 def main():
@@ -125,10 +126,15 @@ def main():
         # )
         # purchase_pending_orders_fact_processor.run()
 
-        ewm_locations_fact_processor = EWMLocationsFactETL(
+        forecast_consumptions_fact_processor = ForecastConsumptionsFactETL(
             con_datawarehouse, con_hana, lookup
         )
-        ewm_locations_fact_processor.run()
+        forecast_consumptions_fact_processor.run()
+
+        # ewm_locations_fact_processor = EWMLocationsFactETL(
+        #     con_datawarehouse, con_hana, lookup
+        # )
+        # ewm_locations_fact_processor.run()
 
     except Exception as e:
         Logger().error(f"Critical error in main: {e}")

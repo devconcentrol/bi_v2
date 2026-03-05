@@ -33,6 +33,7 @@ from consumption_ceco_fact import ConsumptionCeCoFactETL
 from sample_delivery_fact import SampleDeliveryFactETL
 from sales_delivery_date_change_fact import SalesDeliveryDateChangeFactETL
 from purchase_pending_orders_fact import PurchasePendingOrdersFactETL
+from forecast_consumptions_fact import ForecastConsumptionsFactETL
 
 
 def main() -> None:
@@ -198,6 +199,12 @@ def main() -> None:
         )
         schedule.every().day.at("04:40").do(purchase_pending_orders_fact_processor.run)
         schedule.every().day.at("13:05").do(purchase_pending_orders_fact_processor.run)
+
+        # # # Forecast Consumptions Fact
+        forecast_consumptions_fact_processor = ForecastConsumptionsFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
+        schedule.every().day.at("04:45").do(forecast_consumptions_fact_processor.run)
 
         # # # Monitor Stock Fact
         monitor_stock_fact_processor = MonitorStockFactETL(
