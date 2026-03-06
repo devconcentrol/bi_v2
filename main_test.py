@@ -83,10 +83,10 @@ def main():
         # sales_fact_processor = SalesFactETL(con_datawarehouse, con_hana, lookup)
         # sales_fact_processor.run()
 
-        # availability_calculation_fact_processor = AvailabilityCalculationFactETL(
-        #     con_datawarehouse, con_hana, lookup
-        # )
-        # availability_calculation_fact_processor.run()
+        availability_calculation_fact_processor = AvailabilityCalculationFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
+        availability_calculation_fact_processor.run()
 
         # material_real_price_fact_processor = MaterialRealPriceFactETL(
         #     con_datawarehouse, con_hana, lookup
@@ -126,10 +126,10 @@ def main():
         # )
         # purchase_pending_orders_fact_processor.run()
 
-        forecast_consumptions_fact_processor = ForecastConsumptionsFactETL(
-            con_datawarehouse, con_hana, lookup
-        )
-        forecast_consumptions_fact_processor.run()
+        # forecast_consumptions_fact_processor = ForecastConsumptionsFactETL(
+        #     con_datawarehouse, con_hana, lookup
+        # )
+        # forecast_consumptions_fact_processor.run()
 
         # ewm_locations_fact_processor = EWMLocationsFactETL(
         #     con_datawarehouse, con_hana, lookup
