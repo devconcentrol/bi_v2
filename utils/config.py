@@ -61,7 +61,10 @@ class Config:
         self.TABLE_SALES_DATE_CHANGE_FACT = "SalesDateChangeFact"
         self.TABLE_PENDING_ORDERS_FACT = "PendingOrdersFact"
         self.TABLE_EWM_LOCATIONS_FACT = "EWMLocationFact"
-        self.TABLE_CONSUMPTION_FORECAST_FACT = "ComsumptionForecastFactTmp"
+        self.TABLE_CONSUMPTION_FORECAST_FACT = "ComsumptionForecastFact"
+        self.TABLE_DOCUMENT_FLOW_FACT = "DocumentFlowFact"
+        self.TABLE_PURCHASE_MOVEMENTS_FACT = "PurchaseQuantityFact"
+        self.TABLE_RECOVERY_PRODUCTS_FACT = "RecoveredProductsFact"
 
         # Standard Constants
         self.DEFAULT_SALES_ORG = "1000"

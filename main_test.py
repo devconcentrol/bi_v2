@@ -21,6 +21,9 @@ from sales_delivery_date_change_fact import SalesDeliveryDateChangeFactETL
 from purchase_pending_orders_fact import PurchasePendingOrdersFactETL
 from ewm_locations_fact import EWMLocationsFactETL
 from forecast_consumptions_fact import ForecastConsumptionsFactETL
+from document_flow_fact import DocumentFlowFactETL
+from purchase_movements_fact import PurchaseMovementsFactETL
+from recovery_products_fact import RecoveryProductsFactETL
 
 
 def main():
@@ -83,10 +86,10 @@ def main():
         # sales_fact_processor = SalesFactETL(con_datawarehouse, con_hana, lookup)
         # sales_fact_processor.run()
 
-        availability_calculation_fact_processor = AvailabilityCalculationFactETL(
-            con_datawarehouse, con_hana, lookup
-        )
-        availability_calculation_fact_processor.run()
+        # availability_calculation_fact_processor = AvailabilityCalculationFactETL(
+        #     con_datawarehouse, con_hana, lookup
+        # )
+        # availability_calculation_fact_processor.run()
 
         # material_real_price_fact_processor = MaterialRealPriceFactETL(
         #     con_datawarehouse, con_hana, lookup
@@ -135,6 +138,21 @@ def main():
         #     con_datawarehouse, con_hana, lookup
         # )
         # ewm_locations_fact_processor.run()
+
+        document_flow_fact_processor = DocumentFlowFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
+        document_flow_fact_processor.run()
+
+        # purchase_movements_fact_processor = PurchaseMovementsFactETL(
+        #     con_datawarehouse, con_hana, lookup
+        # )
+        # purchase_movements_fact_processor.run()
+
+        # recovery_products_fact_processor = RecoveryProductsFactETL(
+        #     con_datawarehouse, con_hana, lookup
+        # )
+        # recovery_products_fact_processor.run()
 
     except Exception as e:
         Logger().error(f"Critical error in main: {e}")

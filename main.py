@@ -34,6 +34,9 @@ from sample_delivery_fact import SampleDeliveryFactETL
 from sales_delivery_date_change_fact import SalesDeliveryDateChangeFactETL
 from purchase_pending_orders_fact import PurchasePendingOrdersFactETL
 from forecast_consumptions_fact import ForecastConsumptionsFactETL
+from document_flow_fact import DocumentFlowFactETL
+from purchase_movements_fact import PurchaseMovementsFactETL
+from recovery_products_fact import RecoveryProductsFactETL
 
 
 def main() -> None:
@@ -76,6 +79,24 @@ def main() -> None:
         # # Process Costing Fact
         costing_fact_processor = CostingFactETL(con_datawarehouse, lookup)
         schedule.every().day.at("02:00").do(costing_fact_processor.run)
+
+        # # Document Flow Fact
+        document_flow_fact_processor = DocumentFlowFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
+        schedule.every().day.at("02:02").do(document_flow_fact_processor.run)
+
+        # # Purchase Movements Fact
+        purchase_movements_fact_processor = PurchaseMovementsFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
+        schedule.every().day.at("02:04").do(purchase_movements_fact_processor.run)
+
+        # # Recovery Products Fact
+        recovery_products_fact_processor = RecoveryProductsFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
+        schedule.every().day.at("02:06").do(recovery_products_fact_processor.run)
 
         # # EWM Tasks
         ewm_tasks_fact_processor = EWMTasksFactETL(con_datawarehouse, con_hana, lookup)
