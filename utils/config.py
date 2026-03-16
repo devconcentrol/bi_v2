@@ -67,6 +67,10 @@ class Config:
         self.TABLE_RECOVERY_PRODUCTS_FACT = "RecoveredProductsFact"
         self.TABLE_IMMOBILIZED_HIST_FACT = "NewImmobilizedHistFact"
         self.TABLE_PURCH_DELV_DATE_FACT = "PurchDeliveryDate"
+        self.TABLE_VENDOR_ASSESMENT_FACT = "VendorAssesmentFact"
+        self.TABLE_SUSTAINABILITY_DATA_FACT = "SustainabilityDataFact"
+        self.TABLE_SALES_ORDER_FACT = "SalesOrderFact"
+        self.TABLE_PURCH_AVG_PRICE_FACT = "PurchAvgPriceFact"
 
         # Standard Constants
         self.DEFAULT_SALES_ORG = "1000"

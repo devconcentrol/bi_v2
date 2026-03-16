@@ -39,7 +39,10 @@ from purchase_movements_fact import PurchaseMovementsFactETL
 from recovery_products_fact import RecoveryProductsFactETL
 from purch_delivery_date_fact import PurchDeliveryDateFactETL
 from inmobilized_hist_fact import ImmobilizedHistFactETL
-
+from vendor_assesment_fact import VendorAssesmentFactETL
+from sustainability_data_fact import SustainabilityDataFactETL
+from sales_order_hist_fact import SalesOrderHistFactETL
+from purch_average_price_fact import PurchAvgPriceFactETL
 
 def main() -> None:
     con_hana: Engine | None = None
@@ -111,6 +114,30 @@ def main() -> None:
             con_datawarehouse, con_hana, lookup
         )
         schedule.every().day.at("02:08").do(immobilized_hist_fact_processor.run)
+
+        # # Vendor Assessment Fact
+        vendor_assesment_fact_processor = VendorAssesmentFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
+        schedule.every().day.at("02:09").do(vendor_assesment_fact_processor.run)
+
+        # # Sustainability Data Fact
+        sustainability_data_processor = SustainabilityDataFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
+        schedule.every().day.at("02:10").do(sustainability_data_processor.run)
+
+        # # Sales Order Historic Fact
+        sales_order_hist_fact_processor = SalesOrderHistFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
+        schedule.every().day.at("02:11").do(sales_order_hist_fact_processor.run)
+
+        # # Purchase Average Price Fact
+        purch_average_price_fact_processor = PurchAvgPriceFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
+        schedule.every().day.at("02:12").do(purch_average_price_fact_processor.run)
 
         # # EWM Tasks
         ewm_tasks_fact_processor = EWMTasksFactETL(con_datawarehouse, con_hana, lookup)

@@ -41,7 +41,7 @@ class PurchDeliveryDateFactETL(BaseFactETL):
         Logger().info("Processing Purchase Delivery Date Fact...")
         config = self._config
 
-        yesterday = (pd.Timestamp.now() - pd.Timedelta(days=3)).strftime("%Y%m%d")
+        yesterday = (pd.Timestamp.now() - pd.Timedelta(days=1)).strftime("%Y%m%d")
 
         # 1. Extract Data from SAP
         # Extract changes since yesterday
