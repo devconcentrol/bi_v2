@@ -24,6 +24,8 @@ from forecast_consumptions_fact import ForecastConsumptionsFactETL
 from document_flow_fact import DocumentFlowFactETL
 from purchase_movements_fact import PurchaseMovementsFactETL
 from recovery_products_fact import RecoveryProductsFactETL
+from purch_delivery_date_fact import PurchDeliveryDateFactETL
+from inmobilized_hist_fact import ImmobilizedHistFactETL
 
 
 def main():
@@ -139,10 +141,10 @@ def main():
         # )
         # ewm_locations_fact_processor.run()
 
-        document_flow_fact_processor = DocumentFlowFactETL(
-            con_datawarehouse, con_hana, lookup
-        )
-        document_flow_fact_processor.run()
+        # document_flow_fact_processor = DocumentFlowFactETL(
+        #     con_datawarehouse, con_hana, lookup
+        # )
+        # document_flow_fact_processor.run()
 
         # purchase_movements_fact_processor = PurchaseMovementsFactETL(
         #     con_datawarehouse, con_hana, lookup
@@ -153,6 +155,16 @@ def main():
         #     con_datawarehouse, con_hana, lookup
         # )
         # recovery_products_fact_processor.run()
+
+        purch_delivery_date_fact_processor = PurchDeliveryDateFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
+        purch_delivery_date_fact_processor.run()
+
+        # immobilized_hist_fact_processor = ImmobilizedHistFactETL(
+        #     con_datawarehouse, con_hana, lookup
+        # )
+        # immobilized_hist_fact_processor.run()
 
     except Exception as e:
         Logger().error(f"Critical error in main: {e}")

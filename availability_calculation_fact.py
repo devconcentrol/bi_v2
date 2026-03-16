@@ -139,13 +139,17 @@ class AvailabilityCalculationFactETL(BaseFactETL):
             # Parse Dates
             # Original: datetime.strptime(row["gltrs"], "%Y%m%d").date()
             ofs_liberadas["release_date"] = (
-                pd.to_datetime(ofs_liberadas["gltrs"], errors="coerce")
+                pd.to_datetime(
+                    ofs_liberadas["gltrs"].astype(str), format="%Y%m%d", errors="coerce"
+                )
                 .dt.strftime("%Y-%m-%d")
                 .convert_dtypes()
             )
 
             ofs_liberadas["finish_date"] = (
-                pd.to_datetime(ofs_liberadas["gltri"], errors="coerce")
+                pd.to_datetime(
+                    ofs_liberadas["gltri"].astype(str), format="%Y%m%d", errors="coerce"
+                )
                 .dt.strftime("%Y-%m-%d")
                 .convert_dtypes()
             )

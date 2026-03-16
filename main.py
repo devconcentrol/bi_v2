@@ -37,6 +37,8 @@ from forecast_consumptions_fact import ForecastConsumptionsFactETL
 from document_flow_fact import DocumentFlowFactETL
 from purchase_movements_fact import PurchaseMovementsFactETL
 from recovery_products_fact import RecoveryProductsFactETL
+from purch_delivery_date_fact import PurchDeliveryDateFactETL
+from inmobilized_hist_fact import ImmobilizedHistFactETL
 
 
 def main() -> None:
@@ -97,6 +99,18 @@ def main() -> None:
             con_datawarehouse, con_hana, lookup
         )
         schedule.every().day.at("02:06").do(recovery_products_fact_processor.run)
+
+        # # Purchase Delivery Date Fact
+        purch_delivery_date_fact_processor = PurchDeliveryDateFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
+        schedule.every().day.at("02:07").do(purch_delivery_date_fact_processor.run)
+
+        # # Immobilized History Fact
+        immobilized_hist_fact_processor = ImmobilizedHistFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
+        schedule.every().day.at("02:08").do(immobilized_hist_fact_processor.run)
 
         # # EWM Tasks
         ewm_tasks_fact_processor = EWMTasksFactETL(con_datawarehouse, con_hana, lookup)

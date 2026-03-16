@@ -65,6 +65,8 @@ class Config:
         self.TABLE_DOCUMENT_FLOW_FACT = "DocumentFlowFact"
         self.TABLE_PURCHASE_MOVEMENTS_FACT = "PurchaseQuantityFact"
         self.TABLE_RECOVERY_PRODUCTS_FACT = "RecoveredProductsFact"
+        self.TABLE_IMMOBILIZED_HIST_FACT = "NewImmobilizedHistFact"
+        self.TABLE_PURCH_DELV_DATE_FACT = "PurchDeliveryDate"
 
         # Standard Constants
         self.DEFAULT_SALES_ORG = "1000"
