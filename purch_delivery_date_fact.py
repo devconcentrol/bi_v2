@@ -119,7 +119,7 @@ class PurchDeliveryDateFactETL(BaseFactETL):
         results = results.merge(
             df_dw_keys, on=["company", "plant", "purchid", "position"], how="left"
         )
-        results["exists_in_dw"] = results["exists_in_dw"].fillna(False)
+        results["exists_in_dw"] = results["exists_in_dw"].notna()
 
         # 4. Prepare Load operations
         metadata: MetaData = MetaData()

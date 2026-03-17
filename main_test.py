@@ -31,6 +31,7 @@ from sustainability_data_fact import SustainabilityDataFactETL
 from sales_order_hist_fact import SalesOrderHistFactETL
 from purch_average_price_fact import PurchAvgPriceFactETL
 
+
 def main():
     con_hana: Engine | None = None
     con_datawarehouse: Engine | None = None
@@ -159,10 +160,10 @@ def main():
         # )
         # recovery_products_fact_processor.run()
 
-        # purch_delivery_date_fact_processor = PurchDeliveryDateFactETL(
-        #     con_datawarehouse, con_hana, lookup
-        # )
-        # purch_delivery_date_fact_processor.run()
+        purch_delivery_date_fact_processor = PurchDeliveryDateFactETL(
+            con_datawarehouse, con_hana, lookup
+        )
+        purch_delivery_date_fact_processor.run()
 
         # immobilized_hist_fact_processor = ImmobilizedHistFactETL(
         #     con_datawarehouse, con_hana, lookup
@@ -184,10 +185,10 @@ def main():
         # )
         # sales_order_hist_fact_processor.run()
 
-        purch_average_price_fact_processor = PurchAvgPriceFactETL(
-            con_datawarehouse, con_hana, lookup
-        )
-        purch_average_price_fact_processor.run()
+        # purch_average_price_fact_processor = PurchAvgPriceFactETL(
+        #     con_datawarehouse, con_hana, lookup
+        # )
+        # purch_average_price_fact_processor.run()
 
     except Exception as e:
         Logger().error(f"Critical error in main: {e}")
