@@ -30,6 +30,7 @@ from vendor_assesment_fact import VendorAssesmentFactETL
 from sustainability_data_fact import SustainabilityDataFactETL
 from sales_order_hist_fact import SalesOrderHistFactETL
 from purch_average_price_fact import PurchAvgPriceFactETL
+from dimensions.vendor_dim import VendorDim
 
 
 def main():
@@ -49,6 +50,9 @@ def main():
 
         # Initialize dimension lookup
         lookup = DimensionLookup(con_datawarehouse)
+
+        vendor_dim_processor = VendorDim(con_datawarehouse, con_hana, lookup)
+        vendor_dim_processor.run()
 
         # Process Costing Fact
         # costing_fact_processor = CostingFactETL(con_datawarehouse, lookup)
@@ -160,10 +164,10 @@ def main():
         # )
         # recovery_products_fact_processor.run()
 
-        purch_delivery_date_fact_processor = PurchDeliveryDateFactETL(
-            con_datawarehouse, con_hana, lookup
-        )
-        purch_delivery_date_fact_processor.run()
+        # purch_delivery_date_fact_processor = PurchDeliveryDateFactETL(
+        #     con_datawarehouse, con_hana, lookup
+        # )
+        # purch_delivery_date_fact_processor.run()
 
         # immobilized_hist_fact_processor = ImmobilizedHistFactETL(
         #     con_datawarehouse, con_hana, lookup
