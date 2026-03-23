@@ -96,9 +96,11 @@ class SalesDeliveryDateChangeFactETL(BaseFactETL):
         date_cols = ["erdat", "fecha_anterior", "fecha_actual", "audat", "wadat"]
         for col in date_cols:
             if col in results.columns:
-                results[col] = pd.to_datetime(
-                    results[col], format="%Y%m%d", errors="coerce"
-                ).convert_dtypes()
+                results[col] = (
+                    pd.to_datetime(results[col], format="%Y%m%d", errors="coerce")
+                    .dt.strftime("%Y-%m-%d")
+                    .convert_dtypes()
+                )
 
         # Numeric Conversions
         # Using .fillna(0) to ensure no NA/NaN values reach SQL DECIMAL columns
