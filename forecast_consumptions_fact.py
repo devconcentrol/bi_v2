@@ -31,26 +31,48 @@ class ForecastConsumptionsFactETL(BaseFactETL):
         "meins": "UnitId",
     }
 
+    @staticmethod
+    def _calculate_cutoff_date(now: datetime) -> datetime:
+        first_day_current = now.replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0
+        )
+        if now.day <= 15:
+            return first_day_current
+        if now.month == 12:
+            return first_day_current.replace(year=now.year + 1, month=1)
+        return first_day_current.replace(month=now.month + 1)
+
+    def _transform_results(self, results: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
+        results = results.copy()
+        results.columns = results.columns.str.lower()
+
+        material_map = self._lookup.get_material_map()
+        results["matnr"] = results["matnr"].astype(str)
+        results["MaterialId"] = results["matnr"].map(material_map)
+
+        missing_materials = (
+            results.loc[results["MaterialId"].isna(), "matnr"].astype(str).unique().tolist()
+        )
+        results = results.dropna(subset=["MaterialId"])
+
+        if results.empty:
+            return results, missing_materials
+
+        results["ForecastDate"] = pd.to_datetime(
+            results["bdter"].astype(str), format="%Y%m%d", errors="coerce"
+        ).dt.date
+        results["bdmng"] = pd.to_numeric(results["bdmng"], errors="coerce").fillna(0)
+        results = results.rename(columns=self.COLUMN_MAPPING)
+
+        return results[list(self.COLUMN_MAPPING.values())], missing_materials
+
     @error_handler
     def run(self) -> None:
         Logger().info("Processing Forecast Consumptions Fact...")
 
         # 1. Date Calculation in Python
         now = datetime.now()
-        first_day_current = now.replace(
-            day=1, hour=0, minute=0, second=0, microsecond=0
-        )
-
-        # Decide cutoff based on the current day of the month
-        if now.day <= 15:
-            # Everything from the beginning of the current month
-            cutoff_date = first_day_current
-        else:
-            # Everything from the beginning of the next month
-            if now.month == 12:
-                cutoff_date = first_day_current.replace(year=now.year + 1, month=1)
-            else:
-                cutoff_date = first_day_current.replace(month=now.month + 1)
+        cutoff_date = self._calculate_cutoff_date(now)
 
         cutoff_sap = cutoff_date.strftime("%Y%m%d")
         cutoff_dw = cutoff_date.strftime("%Y-%m-%d")
@@ -86,21 +108,13 @@ class ForecastConsumptionsFactETL(BaseFactETL):
             return
 
         # 4. Transform Data
-        # Normalize column names to lowercase
-        results.columns = results.columns.str.lower()
-
-        # Material ID Mapping
-        material_map = self._lookup.get_material_map()
-        results["matnr"] = results["matnr"].astype(str)
-        results["MaterialId"] = results["matnr"].map(material_map)
-
-        # Drop rows with missing material mapping
-        missing_materials = results[results["MaterialId"].isna()]
-        if not missing_materials.empty:
+        results, missing_materials = self._transform_results(results)
+        if missing_materials:
             Logger().warning(
-                f"Dropped {len(missing_materials)} rows due to missing MaterialId ({missing_materials['matnr'].unique()})."
+                "Dropped %s rows due to missing MaterialId (%s).",
+                len(missing_materials),
+                missing_materials,
             )
-        results = results.dropna(subset=["MaterialId"])
 
         if results.empty:
             Logger().warning("No records remaining after material lookup.")
@@ -109,20 +123,8 @@ class ForecastConsumptionsFactETL(BaseFactETL):
                 self._update_etl_info(conn, "process_forecast_consumptions")
             return
 
-        # Handle ForecastDate transformation
-        results["ForecastDate"] = pd.to_datetime(
-            results["bdter"].astype(str), format="%Y%m%d", errors="coerce"
-        ).dt.date
-
-        # Ensure numeric Qty
-        results["bdmng"] = pd.to_numeric(results["bdmng"], errors="coerce").fillna(0)
-
-        # Rename and Select Columns
-        results = results.rename(columns=self.COLUMN_MAPPING)
-        final_cols = list(self.COLUMN_MAPPING.values())
-
         insert_records = (
-            results[final_cols]
+            results
             .where(pd.notnull(results), None)
             .to_dict(orient="records")
         )

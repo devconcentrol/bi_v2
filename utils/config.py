@@ -20,6 +20,7 @@ class Config:
 
         # Paths
         self.COSTING_PATH = os.getenv("COSTING_PATH")
+        self.JOB_CONFIG_PATH = os.getenv("JOB_CONFIG_PATH", "jobs_config.json")
 
         # Validation
         if not self.HANA_CONNECTION:

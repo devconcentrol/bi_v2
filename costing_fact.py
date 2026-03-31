@@ -17,13 +17,57 @@ class CostingFactETL:
 
         self.LOADED_DIR = "loaded"
 
+    def _get_loaded_dir(self, source_directory: str) -> str:
+        return os.path.join(source_directory, self.LOADED_DIR)
+
+    def _transform_costing_frame(
+        self,
+        df: pd.DataFrame,
+        customer_map: dict,
+        material_map: dict,
+    ) -> pd.DataFrame:
+        df = df.copy()
+
+        df["CostingDate"] = pd.to_datetime(
+            df["CostingDate"], format="%Y%m%d", errors="coerce"
+        ).dt.date
+
+        df["InvoiceDiscount"] = pd.to_numeric(
+            df["InvoiceDiscount"], errors="coerce"
+        ).fillna(0)
+        df["Channel"] = df["Channel"].fillna(self._config.DEFAULT_CHANNEL)
+
+        df["CustKey"] = (
+            df["SalesOrganization"].astype(str)
+            + df["Channel"].astype(str)
+            + self._config.DEFAULT_DIVISION
+            + df["CustomerCode"].astype(str)
+        )
+        df["CustId"] = df["CustKey"].map(customer_map)
+
+        df["CustKey2"] = (
+            df["SalesOrganization"].astype(str)
+            + self._config.DEFAULT_CHANNEL
+            + self._config.DEFAULT_DIVISION
+            + df["CustomerCode"].astype(str)
+        )
+        df["CustId_Fallback"] = df["CustKey2"].map(customer_map)
+        df["CustId"] = df["CustId"].fillna(df["CustId_Fallback"])
+
+        df["MaterialCode"] = df["MaterialCode"].astype(str).str.replace("1000A", "MA")
+        df["MaterialId"] = df["MaterialCode"].astype(str).map(material_map)
+
+        return df
+
     @error_handler
     def run(self):
         """
         Processes all files matching the pattern in the given directory,
         transforms them, uploads to DB, and moves them to 'loaded'.
         """
-        directory = self._config.COSTING_PATH
+        directory = (
+            self._config.COSTING_PATH if self._config.COSTING_PATH is not None else "./"
+        )
         pattern = os.path.join(directory, "*.xlsx")
         files = glob.glob(pattern)
 
@@ -31,7 +75,8 @@ class CostingFactETL:
             Logger().info(f"No files found matching pattern: {pattern}")
             return
 
-        os.makedirs(self.LOADED_DIR, exist_ok=True)
+        loaded_dir = self._get_loaded_dir(directory)
+        os.makedirs(loaded_dir, exist_ok=True)
 
         # Initialize maps once for efficiency
         customer_map = self._lookup.get_customer_map()
@@ -63,36 +108,7 @@ class CostingFactETL:
             )
 
             # 2. Transform Data
-            df["CostingDate"] = pd.to_datetime(
-                df["CostingDate"], format="%Y%m%d", errors="coerce"
-            ).dt.date
-
-            df["InvoiceDiscount"] = df["InvoiceDiscount"].fillna(0)
-            df["Channel"] = df["Channel"].fillna(self._config.DEFAULT_CHANNEL)
-
-            # Map Customers
-            df["CustKey"] = (
-                df["SalesOrganization"].astype(str)
-                + df["Channel"].astype(str)
-                + self._config.DEFAULT_DIVISION
-                + df["CustomerCode"].astype(str)
-            )
-            df["CustId"] = df["CustKey"].map(customer_map)
-
-            df["CustKey2"] = (
-                df["SalesOrganization"].astype(str)
-                + self._config.DEFAULT_CHANNEL
-                + self._config.DEFAULT_DIVISION
-                + df["CustomerCode"].astype(str)
-            )
-            df["CustId_Fallback"] = df["CustKey2"].map(customer_map)
-            df["CustId"] = df["CustId"].fillna(df["CustId_Fallback"])
-
-            # Map Materials
-            df["MaterialCode"] = (
-                df["MaterialCode"].astype(str).str.replace("1000A", "MA")
-            )
-            df["MaterialId"] = df["MaterialCode"].astype(str).map(material_map)
+            df = self._transform_costing_frame(df, customer_map, material_map)
 
             # Handle missing IDs
             missing_customers = df[df["CustId"].isna()]["CustomerCode"].unique()
@@ -135,7 +151,7 @@ class CostingFactETL:
             )
 
             # 4. Move to loaded
-            dest_path = os.path.join(self.LOADED_DIR, os.path.basename(file_path))
+            dest_path = os.path.join(loaded_dir, os.path.basename(file_path))
             if os.path.exists(dest_path):
                 os.remove(dest_path)
             shutil.move(file_path, dest_path)

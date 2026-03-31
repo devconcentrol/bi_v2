@@ -1,201 +1,93 @@
-from sqlalchemy import create_engine, Engine
-from utils.dimension_lookup import DimensionLookup
-from utils.logger import Logger
+import argparse
+from collections.abc import Sequence
+
+from sqlalchemy import Engine, create_engine
+
+from job_registry import RuntimeContext, build_job_definitions, get_job_by_name
 from utils.config import Config
-from costing_fact import CostingFactETL
-from dimensions.customer_dim import CustomerDim
-from customer_price_fact import CustomerPriceFactETL
-from planned_orders_qty_fact import PlannedOrdersQtyFactETL
-from sales_open_orders_fact import SalesOpenOrdersFactETL
-from production_data_fact import ProductionDataFactETL
-from production_orders_state_change_fact import ProductonOrdersStateChangeFactETL
-from availability_calculation_fact import AvailabilityCalculationFactETL
-from sales_fact import SalesFactETL
-from material_real_price_fact import MaterialRealPriceFactETL
-from regularization_fact import RegularizationFactETL
-from ewm_task_fact import EWMTasksFactETL
-from consumption_fact import ConsumptionFactETL
-from consumption_ceco_fact import ConsumptionCeCoFactETL
-from sample_delivery_fact import SampleDeliveryFactETL
-from sales_delivery_date_change_fact import SalesDeliveryDateChangeFactETL
-from purchase_pending_orders_fact import PurchasePendingOrdersFactETL
-from ewm_locations_fact import EWMLocationsFactETL
-from forecast_consumptions_fact import ForecastConsumptionsFactETL
-from document_flow_fact import DocumentFlowFactETL
-from purchase_movements_fact import PurchaseMovementsFactETL
-from recovery_products_fact import RecoveryProductsFactETL
-from purch_delivery_date_fact import PurchDeliveryDateFactETL
-from inmobilized_hist_fact import ImmobilizedHistFactETL
-from vendor_assesment_fact import VendorAssesmentFactETL
-from sustainability_data_fact import SustainabilityDataFactETL
-from sales_order_hist_fact import SalesOrderHistFactETL
-from purch_average_price_fact import PurchAvgPriceFactETL
-from dimensions.vendor_dim import VendorDim
+from utils.dimension_lookup import DimensionLookup
+from utils.job_runner import run_job
+from utils.logger import Logger
 
 
-def main():
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Run BI ETL jobs manually from the command line.",
+    )
+    parser.add_argument(
+        "--config",
+        dest="config_path",
+        help="Path to an alternate jobs config JSON file.",
+    )
+
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    subparsers.add_parser("list", help="List enabled jobs from the active config.")
+
+    run_parser = subparsers.add_parser("run", help="Run a single enabled job.")
+    run_parser.add_argument("job_name", help="Name of the job to execute.")
+
+    return parser
+
+
+def _build_runtime(
+    config_path: str | None,
+) -> tuple[list, Engine | None, Engine | None]:
+    config = Config.get_instance()
+
+    if config.HANA_CONNECTION is None or config.DW_CONNECTION is None:
+        raise ValueError("Database connection strings are not configured")
+
+    con_hana = create_engine(config.HANA_CONNECTION)
+    con_datawarehouse = create_engine(config.DW_CONNECTION)
+
+    lookup = DimensionLookup(con_datawarehouse)
+    context = RuntimeContext(
+        con_dw=con_datawarehouse,
+        con_sap=con_hana,
+        lookup=lookup,
+    )
+    jobs = build_job_definitions(context, config_path)
+
+    return jobs, con_hana, con_datawarehouse
+
+
+def _list_jobs(jobs: list) -> int:
+    for job in jobs:
+        times = ", ".join(job.times)
+        print(f"{job.name}: {times}")
+    return 0
+
+
+def _run_job(jobs: list, job_name: str) -> int:
+    job = get_job_by_name(jobs, job_name)
+    if job is None:
+        raise ValueError(f"Unknown or disabled job '{job_name}'")
+
+    run_job(job.name, job.runner)
+    return 0
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+
     con_hana: Engine | None = None
     con_datawarehouse: Engine | None = None
+
     try:
-        config = Config.get_instance()
+        jobs, con_hana, con_datawarehouse = _build_runtime(args.config_path)
 
-        # Create database connections
-        if config.HANA_CONNECTION is None or config.DW_CONNECTION is None:
-            raise ValueError("Database connection strings are not configured")
+        if args.command == "list":
+            return _list_jobs(jobs)
+        if args.command == "run":
+            return _run_job(jobs, args.job_name)
 
-        con_hana = create_engine(config.HANA_CONNECTION)
-        con_datawarehouse = create_engine(config.DW_CONNECTION)
-
-        Logger().info("Starting ETL processes")
-
-        # Initialize dimension lookup
-        lookup = DimensionLookup(con_datawarehouse)
-
-        vendor_dim_processor = VendorDim(con_datawarehouse, con_hana, lookup)
-        vendor_dim_processor.run()
-
-        # Process Costing Fact
-        # costing_fact_processor = CostingFactETL(con_datawarehouse, lookup)
-        # costing_fact_processor.run()
-
-        # Process Customer Dim
-        # customer_dim_processor = CustomerDim(con_datawarehouse, con_hana, lookup)
-        # customer_dim_processor.run()
-
-        # Process Customer Price Fact
-        # customer_price_fact_processor = CustomerPriceFactETL(
-        #     con_datawarehouse, con_hana, lookup
-        # )
-        # customer_price_fact_processor.run()
-
-        # Process Planned Orders Qty Fact
-        # planned_orders_qty_fact_processor = PlannedOrdersQqtyFactETL(
-        #     con_datawarehouse, con_hana, lookup
-        # )
-        # planned_orders_qty_fact_processor.run()
-
-        # Process Sales Open Orders Fact
-        # sales_open_orders_fact_processor = SalesOpenOrdersFactETL(
-        #     con_datawarehouse, con_hana, lookup
-        # )
-        # sales_open_orders_fact_processor.run()
-
-        # Process Production Data Fact
-        # production_data_fact_processor = ProductionDataFactETL(
-        #     con_datawarehouse, con_hana, lookup
-        # )
-        # production_data_fact_processor.run()
-
-        # Process Production Orders State Change Fact
-        # prod_orders_state_change_fact_processor = ProductonOrdersStateChangeFactETL(
-        #     con_datawarehouse, con_hana, lookup
-        # )
-        # prod_orders_state_change_fact_processor.run()
-
-        # Process Sales Fact
-        # sales_fact_processor = SalesFactETL(con_datawarehouse, con_hana, lookup)
-        # sales_fact_processor.run()
-
-        # availability_calculation_fact_processor = AvailabilityCalculationFactETL(
-        #     con_datawarehouse, con_hana, lookup
-        # )
-        # availability_calculation_fact_processor.run()
-
-        # material_real_price_fact_processor = MaterialRealPriceFactETL(
-        #     con_datawarehouse, con_hana, lookup
-        # )
-        # material_real_price_fact_processor.run()
-
-        # regularization_fact_processor = RegularizationFactETL(
-        #     con_datawarehouse, con_hana, lookup
-        # )
-        # regularization_fact_processor.run()
-
-        # ewm_tasks_fact_processor = EWMTasksFactETL(con_datawarehouse, con_hana, lookup)
-        # ewm_tasks_fact_processor.run()
-
-        # consumption_fact_processor = ConsumptionFactETL(
-        #     con_datawarehouse, con_hana, lookup
-        # )
-        # consumption_fact_processor.run()
-
-        # consumption_ceco_fact_processor = ConsumptionCeCoFactETL(
-        #     con_datawarehouse, con_hana, lookup
-        # )
-        # consumption_ceco_fact_processor.run()
-
-        # sample_delivery_fact_processor = SampleDeliveryFactETL(
-        #     con_datawarehouse, con_hana, lookup
-        # )
-        # sample_delivery_fact_processor.run()
-
-        # sales_delivery_date_change_fact_processor = SalesDeliveryDateChangeFactETL(
-        #     con_datawarehouse, con_hana, lookup
-        # )
-        # sales_delivery_date_change_fact_processor.run()
-
-        # purchase_pending_orders_fact_processor = PurchasePendingOrdersFactETL(
-        #     con_datawarehouse, con_hana, lookup
-        # )
-        # purchase_pending_orders_fact_processor.run()
-
-        # forecast_consumptions_fact_processor = ForecastConsumptionsFactETL(
-        #     con_datawarehouse, con_hana, lookup
-        # )
-        # forecast_consumptions_fact_processor.run()
-
-        # ewm_locations_fact_processor = EWMLocationsFactETL(
-        #     con_datawarehouse, con_hana, lookup
-        # )
-        # ewm_locations_fact_processor.run()
-
-        # document_flow_fact_processor = DocumentFlowFactETL(
-        #     con_datawarehouse, con_hana, lookup
-        # )
-        # document_flow_fact_processor.run()
-
-        # purchase_movements_fact_processor = PurchaseMovementsFactETL(
-        #     con_datawarehouse, con_hana, lookup
-        # )
-        # purchase_movements_fact_processor.run()
-
-        # recovery_products_fact_processor = RecoveryProductsFactETL(
-        #     con_datawarehouse, con_hana, lookup
-        # )
-        # recovery_products_fact_processor.run()
-
-        # purch_delivery_date_fact_processor = PurchDeliveryDateFactETL(
-        #     con_datawarehouse, con_hana, lookup
-        # )
-        # purch_delivery_date_fact_processor.run()
-
-        # immobilized_hist_fact_processor = ImmobilizedHistFactETL(
-        #     con_datawarehouse, con_hana, lookup
-        # )
-        # immobilized_hist_fact_processor.run()
-
-        # vendor_assesment_fact_processor = VendorAssesmentFactETL(
-        #     con_datawarehouse, con_hana, lookup
-        # )
-        # vendor_assesment_fact_processor.run()
-
-        # sustainability_data_processor = SustainabilityDataFactETL(
-        #     con_datawarehouse, con_hana, lookup
-        # )
-        # sustainability_data_processor.run()
-
-        # sales_order_hist_fact_processor = SalesOrderHistFactETL(
-        #     con_datawarehouse, con_hana, lookup
-        # )
-        # sales_order_hist_fact_processor.run()
-
-        # purch_average_price_fact_processor = PurchAvgPriceFactETL(
-        #     con_datawarehouse, con_hana, lookup
-        # )
-        # purch_average_price_fact_processor.run()
+        raise ValueError(f"Unsupported command '{args.command}'")
 
     except Exception as e:
-        Logger().error(f"Critical error in main: {e}")
+        Logger().exception(f"Critical error in main_test: {e}")
+        raise
     finally:
         Logger().info("Closing database connections...")
         if con_hana is not None:
@@ -205,4 +97,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

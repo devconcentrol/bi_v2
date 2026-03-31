@@ -1,6 +1,7 @@
 import logging
 import sys
 
+
 class Logger:
     _instance = None
 
@@ -13,12 +14,12 @@ class Logger:
     def _initialize_logger(self):
         self.logger = logging.getLogger("BI_Logger")
         self.logger.setLevel(logging.INFO)
-        
-        # Prevent adding multiple handlers if instantiated multiple times (though singleton prevents this mostly)
+
+        # Prevent adding multiple handlers if instantiated multiple times.
         if not self.logger.handlers:
             handler = logging.StreamHandler(sys.stdout)
             formatter = logging.Formatter(
-                fmt="%(asctime)s %(message)s",
+                fmt="%(asctime)s %(levelname)s %(message)s",
                 datefmt="%m/%d/%Y %I:%M:%S %p"
             )
             handler.setFormatter(formatter)
@@ -32,3 +33,6 @@ class Logger:
 
     def warning(self, message: str, *args):
         self.logger.warning(message, *args)
+
+    def exception(self, message: str, *args):
+        self.logger.exception(message, *args)

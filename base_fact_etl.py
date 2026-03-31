@@ -1,6 +1,7 @@
 from sqlalchemy import text
 from utils.config import Config
 
+
 class BaseFactETL:
     def __init__(self, con_dw, con_sap, lookup):
         self._con_dw = con_dw
@@ -12,10 +13,10 @@ class BaseFactETL:
         raise NotImplementedError
 
     def _update_etl_info(self, conn=None, etl_name: str = None):
-        stmt = text(
-            f"UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() WHERE ETL = '{etl_name}'"
-        )
         if conn:
-            conn.execute(stmt)
+            stmt = text(
+                f"UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() WHERE ETL = :etl_name"
+            )
+            conn.execute(stmt, {"etl_name": etl_name})
         else:
-            raise ValueError("No connection provided")            
+            raise ValueError("No connection provided")
