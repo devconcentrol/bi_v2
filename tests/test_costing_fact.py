@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pandas as pd
 
-from costing_fact import CostingFactETL
+from etl.facts.costing_fact import CostingFactETL
 from utils.config import Config
 
 

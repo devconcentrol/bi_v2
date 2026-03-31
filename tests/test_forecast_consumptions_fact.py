@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pandas as pd
 
-from forecast_consumptions_fact import ForecastConsumptionsFactETL
+from etl.facts.forecast_consumptions_fact import ForecastConsumptionsFactETL
 from utils.config import Config
 
 
@@ -80,8 +80,8 @@ class ForecastConsumptionsFactTests(unittest.TestCase):
         self.assertEqual(transformed.iloc[0]["Qty"], 5.5)
         self.assertEqual(str(transformed.iloc[0]["ForecastDate"]), "2026-04-01")
 
-    @patch("forecast_consumptions_fact.pd.read_sql")
-    @patch("forecast_consumptions_fact.datetime")
+    @patch("etl.facts.forecast_consumptions_fact.pd.read_sql")
+    @patch("etl.facts.forecast_consumptions_fact.datetime")
     def test_run_deletes_and_inserts_forecast_rows(self, datetime_mock, read_sql_mock):
         lookup = MagicMock()
         lookup.get_material_map.return_value = {"MAT1": 1}
