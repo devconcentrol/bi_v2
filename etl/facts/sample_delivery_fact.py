@@ -142,9 +142,11 @@ class SampleDeliveryFactETL(BaseFactETL):
             # Date conversions with explicit NaT -> None handling to avoid strftime errors
             # Using object dtype to ensure mixed types (date and None) are handled correctly
 
-            results["wadat"] = pd.to_datetime(
-                results["wadat"], errors="coerce"
-            ).dt.strftime("%Y-%m-%d")
+            results["wadat"] = (
+                pd.to_datetime(results["wadat"], errors="coerce", format="%Y%m%d")
+                .dt.strftime("%Y-%m-%d")
+                .convert_dtypes()
+            )
 
             results["wadat_ist"] = (
                 pd.to_datetime(results["wadat_ist"], errors="coerce", format="%Y%m%d")
@@ -152,13 +154,17 @@ class SampleDeliveryFactETL(BaseFactETL):
                 .convert_dtypes()
             )
 
-            results["erdat"] = pd.to_datetime(
-                results["erdat"], errors="coerce"
-            ).dt.strftime("%Y-%m-%d")
+            results["erdat"] = (
+                pd.to_datetime(results["erdat"], errors="coerce", format="%Y%m%d")
+                .dt.strftime("%Y-%m-%d")
+                .convert_dtypes()
+            )
 
-            results["aedat"] = pd.to_datetime(
-                results["aedat"], errors="coerce"
-            ).dt.strftime("%Y-%m-%d")
+            results["aedat"] = (
+                pd.to_datetime(results["aedat"], errors="coerce", format="%Y%m%d")
+                .dt.strftime("%Y-%m-%d")
+                .convert_dtypes()
+            )
 
             results["lfimg"] = pd.to_numeric(results["lfimg"], errors="coerce").fillna(
                 0
