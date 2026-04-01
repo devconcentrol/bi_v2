@@ -58,7 +58,7 @@ class MaterialDim:
 
         stmt_update_etl = text(
             f"""UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() WHERE ETL = 'process_materials'"""
-        )        
+        )
 
         # Load Source Data
         sql_get_materials = """
@@ -67,7 +67,9 @@ class MaterialDim:
                             FROM SAPSR3.ZCON_V_MATERIAL                              
                             WHERE LAEDA = :yesterday
                         """
-        results: pd.DataFrame = pd.read_sql(sql_get_materials, con=self._con_sap, params={"yesterday": yesterday})
+        results: pd.DataFrame = pd.read_sql(
+            sql_get_materials, con=self._con_sap, params={"yesterday": yesterday}
+        )
 
         if results.empty:
             Logger().info("No materials found for processing")
@@ -112,12 +114,12 @@ class MaterialDim:
 
         # Transformation & Vectorization
         results["matnr"] = results["matnr"].astype(str)
-        
+
         # Product Hierarchy Parsing
         # PRDHA structure: Gamma(2) + Division(3) + Family(4) + SubFamily(remaining)
         # We need to handle cases where PRDHA might be too short or null safely
         results["prdha"] = results["prdha"].fillna("").astype(str)
-        
+
         results["gamma_code"] = results["prdha"].str.slice(0, 2)
         results["division_code"] = results["prdha"].str.slice(2, 5)
         results["family_code"] = results["prdha"].str.slice(5, 9)
@@ -125,7 +127,7 @@ class MaterialDim:
 
         # Map Hierarchy IDs
         results["GammaId"] = results["gamma_code"].map(gamma_map)
-        
+
         # Composite keys for deeper levels
         results["division_key"] = results["gamma_code"] + results["division_code"]
         results["DivisionId"] = results["division_key"].map(division_map)
@@ -138,24 +140,28 @@ class MaterialDim:
 
         # Other fields
         results["MaterialStatusId"] = results["mstae"].map(status_map)
-        
+
         # Dates and Numeric conversions
-        results["ersda"] = pd.to_datetime(df["ersda"],format="%Y%m%d", errors="coerce").dt.date
-        
+        results["ersda"] = pd.to_datetime(
+            results["ersda"], format="%Y%m%d", errors="coerce"
+        ).dt.date
+
         # Ensure numeric fields are numeric
-        results["minbe"] = pd.to_numeric(results["minbe"], errors='coerce').fillna(0) / 1000
-        results["eisbe"] = pd.to_numeric(results["eisbe"], errors='coerce')
-        results["mabst"] = pd.to_numeric(results["mabst"], errors='coerce')
-        results["plifz"] = pd.to_numeric(results["plifz"], errors='coerce')
-        results["netweight"] = pd.to_numeric(results["netweight"], errors='coerce')
-        results["mhdhb"] = pd.to_numeric(results["mhdhb"], errors='coerce')
+        results["minbe"] = (
+            pd.to_numeric(results["minbe"], errors="coerce").fillna(0) / 1000
+        )
+        results["eisbe"] = pd.to_numeric(results["eisbe"], errors="coerce")
+        results["mabst"] = pd.to_numeric(results["mabst"], errors="coerce")
+        results["plifz"] = pd.to_numeric(results["plifz"], errors="coerce")
+        results["netweight"] = pd.to_numeric(results["netweight"], errors="coerce")
+        results["mhdhb"] = pd.to_numeric(results["mhdhb"], errors="coerce")
 
         # Material Lookup
         material_map = self._lookup.get_material_map()
         results["MaterialId"] = results["matnr"].map(material_map)
 
         # Replace nan values with None
-        results.replace(float('nan'), None, inplace=True)
+        results.replace(float("nan"), None, inplace=True)
 
         # Split Updates/Inserts
         updates_df = results[results["MaterialId"].notna()]
@@ -165,10 +171,11 @@ class MaterialDim:
 
         # Build update values dynamically using COLUMN_MAPPING
         update_values = {
-            db_col: bindparam(f"b_{db_col}") 
-            for db_col, df_col in self.COLUMN_MAPPING.items() if db_col not in ["MaterialCode","CreatedDate"]            
+            db_col: bindparam(f"b_{db_col}")
+            for db_col, df_col in self.COLUMN_MAPPING.items()
+            if db_col not in ["MaterialCode", "CreatedDate"]
         }
-        
+
         stmt_update_materials: Update = (
             update(material_table)
             .where(material_table.c.MaterialId == bindparam("b_MaterialId"))
@@ -179,28 +186,29 @@ class MaterialDim:
             if not updates_df.empty:
                 rename_dict = {
                     df_col: f"b_{db_col}"
-                    for db_col, df_col in self.COLUMN_MAPPING.items() if db_col not in ["MaterialCode","CreatedDate"]
+                    for db_col, df_col in self.COLUMN_MAPPING.items()
+                    if db_col not in ["MaterialCode", "CreatedDate"]
                 }
                 rename_dict["MaterialId"] = "b_MaterialId"
-                
+
                 update_data = updates_df.rename(columns=rename_dict)[
                     list(rename_dict.values())
                 ].to_dict(orient="records")
-                
-                conn.execute(stmt_update_materials, update_data) # type: ignore
+
+                conn.execute(stmt_update_materials, update_data)  # type: ignore
 
             if not inserts_df.empty:
                 Logger().info(f"Inserting {len(inserts_df)} new materials")
                 rename_dict_insert = {
-                    df_col: db_col 
+                    df_col: db_col
                     for db_col, df_col in self.COLUMN_MAPPING.items()
                     if df_col is not None
                 }
-                                
+
                 insert_data = inserts_df.rename(columns=rename_dict_insert)[
                     list(rename_dict_insert.values())
                 ].to_dict(orient="records")
-                
-                conn.execute(stmt_insert_materials, insert_data) # type: ignore
 
-            conn.execute(stmt_update_etl)        
+                conn.execute(stmt_insert_materials, insert_data)  # type: ignore
+
+            conn.execute(stmt_update_etl)
