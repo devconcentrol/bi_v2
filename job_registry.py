@@ -29,7 +29,9 @@ from etl.facts.material_real_price_fact import MaterialRealPriceFactETL
 from etl.facts.monitor_stock_fact import MonitorStockFactETL
 from etl.facts.planned_orders_qty_fact import PlannedOrdersQtyFactETL
 from etl.facts.production_data_fact import ProductionDataFactETL
-from etl.facts.production_orders_state_change_fact import ProductonOrdersStateChangeFactETL
+from etl.facts.production_orders_state_change_fact import (
+    ProductonOrdersStateChangeFactETL,
+)
 from etl.facts.purch_average_price_fact import PurchAvgPriceFactETL
 from etl.facts.purch_delivery_date_fact import PurchDeliveryDateFactETL
 from etl.facts.purchase_movements_fact import PurchaseMovementsFactETL
@@ -51,6 +53,7 @@ from utils.dimension_lookup import DimensionLookup
 from utils.job_runner import safe_run_job
 from utils.logger import Logger
 from etl.facts.vendor_assesment_fact import VendorAssesmentFactETL
+from etl.facts.customer_dm_fact import CustomerDMFactETL
 
 
 @dataclass(frozen=True)
@@ -77,45 +80,116 @@ class JobConfigEntry:
 def _build_job_factories(context: RuntimeContext) -> dict[str, Callable[[], None]]:
     return {
         "agents_dim": AgentDim(context.con_dw, context.con_sap, context.lookup).run,
-        "customer_dim": CustomerDim(context.con_dw, context.con_sap, context.lookup).run,
-        "material_dim": MaterialDim(context.con_dw, context.con_sap, context.lookup).run,
+        "customer_dim": CustomerDim(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "material_dim": MaterialDim(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
         "vendor_dim": VendorDim(context.con_dw, context.con_sap, context.lookup).run,
         "contact_dim": ContactDim(context.con_dw, context.con_sap, context.lookup).run,
         "invalidate_dimension_caches": context.lookup.invalidate_caches,
         "costing_fact": CostingFactETL(context.con_dw, context.lookup).run,
-        "document_flow_fact": DocumentFlowFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "purchase_movements_fact": PurchaseMovementsFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "recovery_products_fact": RecoveryProductsFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "purch_delivery_date_fact": PurchDeliveryDateFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "immobilized_hist_fact": ImmobilizedHistFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "vendor_assesment_fact": VendorAssesmentFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "sustainability_data_fact": SustainabilityDataFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "sales_order_hist_fact": SalesOrderHistFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "purch_average_price_fact": PurchAvgPriceFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "ewm_tasks_fact": EWMTasksFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "ewm_locations_fact": EWMLocationsFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "extended_stock_fact": ExtendedStockFactETL(context.con_dw, context.con_sap, context.lookup).run,
+        "document_flow_fact": DocumentFlowFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "purchase_movements_fact": PurchaseMovementsFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "recovery_products_fact": RecoveryProductsFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "purch_delivery_date_fact": PurchDeliveryDateFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "immobilized_hist_fact": ImmobilizedHistFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "vendor_assesment_fact": VendorAssesmentFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "sustainability_data_fact": SustainabilityDataFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "sales_order_hist_fact": SalesOrderHistFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "purch_average_price_fact": PurchAvgPriceFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "ewm_tasks_fact": EWMTasksFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "ewm_locations_fact": EWMLocationsFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "extended_stock_fact": ExtendedStockFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
         "sales_fact": SalesFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "extended_batch_stock_fact": ExtendedBatchStockFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "qm_adjustment_fact": QMAdjustmentFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "qm_notification_fact": QMNotificationFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "qm_sample_fact": QMSampleFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "qm_inspection_lot_fact": QMInspectionLotFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "customer_price_fact": CustomerPriceFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "planned_orders_qty_fact": PlannedOrdersQtyFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "sales_open_orders_fact": SalesOpenOrdersFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "availability_calculation_fact": AvailabilityCalculationFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "production_data_fact": ProductionDataFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "prod_orders_state_change_fact": ProductonOrdersStateChangeFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "material_real_price_fact": MaterialRealPriceFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "regularization_fact": RegularizationFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "consumption_fact": ConsumptionFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "consumption_ceco_fact": ConsumptionCeCoFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "sample_delivery_fact": SampleDeliveryFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "sales_delivery_date_change_fact": SalesDeliveryDateChangeFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "purchase_pending_orders_fact": PurchasePendingOrdersFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "forecast_consumptions_fact": ForecastConsumptionsFactETL(context.con_dw, context.con_sap, context.lookup).run,
-        "monitor_stock_fact": MonitorStockFactETL(context.con_dw, context.con_sap, context.lookup).run,
+        "extended_batch_stock_fact": ExtendedBatchStockFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "qm_adjustment_fact": QMAdjustmentFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "qm_notification_fact": QMNotificationFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "qm_sample_fact": QMSampleFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "qm_inspection_lot_fact": QMInspectionLotFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "customer_price_fact": CustomerPriceFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "planned_orders_qty_fact": PlannedOrdersQtyFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "sales_open_orders_fact": SalesOpenOrdersFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "availability_calculation_fact": AvailabilityCalculationFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "production_data_fact": ProductionDataFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "prod_orders_state_change_fact": ProductonOrdersStateChangeFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "material_real_price_fact": MaterialRealPriceFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "regularization_fact": RegularizationFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "consumption_fact": ConsumptionFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "consumption_ceco_fact": ConsumptionCeCoFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "sample_delivery_fact": SampleDeliveryFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "sales_delivery_date_change_fact": SalesDeliveryDateChangeFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "purchase_pending_orders_fact": PurchasePendingOrdersFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "forecast_consumptions_fact": ForecastConsumptionsFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "monitor_stock_fact": MonitorStockFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "customer_dm_fact": CustomerDMFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
     }
 
 
@@ -153,17 +227,25 @@ def load_job_config(
         times = raw_job.get("times", [])
 
         if not isinstance(name, str) or not name:
-            raise ValueError("Each job config entry must define a non-empty string 'name'.")
+            raise ValueError(
+                "Each job config entry must define a non-empty string 'name'."
+            )
         if name in seen_names:
             raise ValueError(f"Job '{name}' is defined more than once in the config.")
         if valid_job_names is not None and name not in valid_job_names:
             raise ValueError(f"Job '{name}' is not registered in the codebase.")
         if not isinstance(enabled, bool):
-            raise ValueError(f"Job '{name}' has invalid 'enabled' value; expected boolean.")
-        if not isinstance(times, list) or not all(isinstance(item, str) for item in times):
+            raise ValueError(
+                f"Job '{name}' has invalid 'enabled' value; expected boolean."
+            )
+        if not isinstance(times, list) or not all(
+            isinstance(item, str) for item in times
+        ):
             raise ValueError(f"Job '{name}' must define 'times' as a list of strings.")
         if enabled and not times:
-            raise ValueError(f"Enabled job '{name}' must define at least one schedule time.")
+            raise ValueError(
+                f"Enabled job '{name}' must define at least one schedule time."
+            )
 
         for scheduled_time in times:
             _validate_time_format(scheduled_time)

@@ -1,44 +1,294 @@
 {
   "jobs": [
-    {"name": "agents_dim", "enabled": true, "times": ["01:00"]},
-    {"name": "customer_dim", "enabled": true, "times": ["01:05"]},
-    {"name": "material_dim", "enabled": true, "times": ["01:10"]},
-    {"name": "vendor_dim", "enabled": true, "times": ["01:15"]},
-    {"name": "contact_dim", "enabled": true, "times": ["01:20"]},
-    {"name": "invalidate_dimension_caches", "enabled": true, "times": ["01:25"]},
-    {"name": "costing_fact", "enabled": true, "times": ["02:00"]},
-    {"name": "document_flow_fact", "enabled": true, "times": ["02:02"]},
-    {"name": "purchase_movements_fact", "enabled": true, "times": ["02:04"]},
-    {"name": "recovery_products_fact", "enabled": true, "times": ["02:06"]},
-    {"name": "purch_delivery_date_fact", "enabled": true, "times": ["02:07"]},
-    {"name": "immobilized_hist_fact", "enabled": true, "times": ["02:08"]},
-    {"name": "vendor_assesment_fact", "enabled": true, "times": ["02:09"]},
-    {"name": "sustainability_data_fact", "enabled": true, "times": ["02:10"]},
-    {"name": "sales_order_hist_fact", "enabled": true, "times": ["02:11"]},
-    {"name": "purch_average_price_fact", "enabled": true, "times": ["02:12"]},
-    {"name": "ewm_tasks_fact", "enabled": true, "times": ["03:00"]},
-    {"name": "ewm_locations_fact", "enabled": true, "times": ["03:02"]},
-    {"name": "extended_stock_fact", "enabled": true, "times": ["03:05"]},
-    {"name": "sales_fact", "enabled": true, "times": ["03:10"]},
-    {"name": "extended_batch_stock_fact", "enabled": true, "times": ["03:15"]},
-    {"name": "qm_adjustment_fact", "enabled": true, "times": ["03:25"]},
-    {"name": "qm_notification_fact", "enabled": true, "times": ["03:30"]},
-    {"name": "qm_sample_fact", "enabled": true, "times": ["03:35"]},
-    {"name": "qm_inspection_lot_fact", "enabled": true, "times": ["03:40"]},
-    {"name": "customer_price_fact", "enabled": true, "times": ["03:45"]},
-    {"name": "planned_orders_qty_fact", "enabled": true, "times": ["03:50"]},
-    {"name": "sales_open_orders_fact", "enabled": true, "times": ["03:55"]},
-    {"name": "availability_calculation_fact", "enabled": true, "times": ["03:55", "11:55", "19:55"]},
-    {"name": "production_data_fact", "enabled": true, "times": ["04:00"]},
-    {"name": "prod_orders_state_change_fact", "enabled": true, "times": ["04:05"]},
-    {"name": "material_real_price_fact", "enabled": true, "times": ["04:10"]},
-    {"name": "regularization_fact", "enabled": true, "times": ["04:15"]},
-    {"name": "consumption_fact", "enabled": true, "times": ["04:20"]},
-    {"name": "consumption_ceco_fact", "enabled": true, "times": ["04:25"]},
-    {"name": "sample_delivery_fact", "enabled": true, "times": ["04:30"]},
-    {"name": "sales_delivery_date_change_fact", "enabled": true, "times": ["04:35"]},
-    {"name": "purchase_pending_orders_fact", "enabled": true, "times": ["04:40", "13:05"]},
-    {"name": "forecast_consumptions_fact", "enabled": true, "times": ["04:45"]},
-    {"name": "monitor_stock_fact", "enabled": true, "times": ["14:00"]}
+    {
+      "name": "agents_dim",
+      "enabled": true,
+      "times": [
+        "01:00"
+      ]
+    },
+    {
+      "name": "customer_dim",
+      "enabled": true,
+      "times": [
+        "01:05"
+      ]
+    },
+    {
+      "name": "material_dim",
+      "enabled": true,
+      "times": [
+        "01:10"
+      ]
+    },
+    {
+      "name": "vendor_dim",
+      "enabled": true,
+      "times": [
+        "01:15"
+      ]
+    },
+    {
+      "name": "contact_dim",
+      "enabled": true,
+      "times": [
+        "01:20"
+      ]
+    },
+    {
+      "name": "invalidate_dimension_caches",
+      "enabled": true,
+      "times": [
+        "01:25"
+      ]
+    },
+    {
+      "name": "costing_fact",
+      "enabled": true,
+      "times": [
+        "02:00"
+      ]
+    },
+    {
+      "name": "document_flow_fact",
+      "enabled": true,
+      "times": [
+        "02:02"
+      ]
+    },
+    {
+      "name": "purchase_movements_fact",
+      "enabled": true,
+      "times": [
+        "02:04"
+      ]
+    },
+    {
+      "name": "recovery_products_fact",
+      "enabled": true,
+      "times": [
+        "02:06"
+      ]
+    },
+    {
+      "name": "purch_delivery_date_fact",
+      "enabled": true,
+      "times": [
+        "02:07"
+      ]
+    },
+    {
+      "name": "immobilized_hist_fact",
+      "enabled": true,
+      "times": [
+        "02:08"
+      ]
+    },
+    {
+      "name": "vendor_assesment_fact",
+      "enabled": true,
+      "times": [
+        "02:09"
+      ]
+    },
+    {
+      "name": "sustainability_data_fact",
+      "enabled": true,
+      "times": [
+        "02:10"
+      ]
+    },
+    {
+      "name": "sales_order_hist_fact",
+      "enabled": true,
+      "times": [
+        "02:11"
+      ]
+    },
+    {
+      "name": "purch_average_price_fact",
+      "enabled": true,
+      "times": [
+        "02:12"
+      ]
+    },
+    {
+      "name": "ewm_tasks_fact",
+      "enabled": true,
+      "times": [
+        "03:00"
+      ]
+    },
+    {
+      "name": "ewm_locations_fact",
+      "enabled": true,
+      "times": [
+        "03:02"
+      ]
+    },
+    {
+      "name": "extended_stock_fact",
+      "enabled": true,
+      "times": [
+        "03:05"
+      ]
+    },
+    {
+      "name": "sales_fact",
+      "enabled": true,
+      "times": [
+        "03:10"
+      ]
+    },
+    {
+      "name": "extended_batch_stock_fact",
+      "enabled": true,
+      "times": [
+        "03:15"
+      ]
+    },
+    {
+      "name": "qm_adjustment_fact",
+      "enabled": true,
+      "times": [
+        "03:25"
+      ]
+    },
+    {
+      "name": "qm_notification_fact",
+      "enabled": true,
+      "times": [
+        "03:30"
+      ]
+    },
+    {
+      "name": "qm_sample_fact",
+      "enabled": true,
+      "times": [
+        "03:35"
+      ]
+    },
+    {
+      "name": "qm_inspection_lot_fact",
+      "enabled": true,
+      "times": [
+        "03:40"
+      ]
+    },
+    {
+      "name": "customer_price_fact",
+      "enabled": true,
+      "times": [
+        "03:45"
+      ]
+    },
+    {
+      "name": "planned_orders_qty_fact",
+      "enabled": true,
+      "times": [
+        "03:50"
+      ]
+    },
+    {
+      "name": "sales_open_orders_fact",
+      "enabled": true,
+      "times": [
+        "03:55"
+      ]
+    },
+    {
+      "name": "availability_calculation_fact",
+      "enabled": true,
+      "times": [
+        "03:55",
+        "11:55",
+        "19:55"
+      ]
+    },
+    {
+      "name": "production_data_fact",
+      "enabled": true,
+      "times": [
+        "04:00"
+      ]
+    },
+    {
+      "name": "prod_orders_state_change_fact",
+      "enabled": true,
+      "times": [
+        "04:05"
+      ]
+    },
+    {
+      "name": "material_real_price_fact",
+      "enabled": true,
+      "times": [
+        "04:10"
+      ]
+    },
+    {
+      "name": "regularization_fact",
+      "enabled": true,
+      "times": [
+        "04:15"
+      ]
+    },
+    {
+      "name": "consumption_fact",
+      "enabled": true,
+      "times": [
+        "04:20"
+      ]
+    },
+    {
+      "name": "consumption_ceco_fact",
+      "enabled": true,
+      "times": [
+        "04:25"
+      ]
+    },
+    {
+      "name": "sample_delivery_fact",
+      "enabled": true,
+      "times": [
+        "04:30"
+      ]
+    },
+    {
+      "name": "sales_delivery_date_change_fact",
+      "enabled": true,
+      "times": [
+        "04:35"
+      ]
+    },
+    {
+      "name": "purchase_pending_orders_fact",
+      "enabled": true,
+      "times": [
+        "04:40",
+        "13:05"
+      ]
+    },
+    {
+      "name": "forecast_consumptions_fact",
+      "enabled": true,
+      "times": [
+        "04:45"
+      ]
+    },
+    {
+      "name": "monitor_stock_fact",
+      "enabled": true,
+      "times": [
+        "14:00"
+      ]
+    },
+    {
+      "name": "customer_dm_fact",
+      "enabled": true,
+      "times": [
+        "4:40"
+      ]
+    }
   ]
 }

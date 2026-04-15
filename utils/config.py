@@ -72,6 +72,7 @@ class Config:
         self.TABLE_SUSTAINABILITY_DATA_FACT = "SustainabilityDataFact"
         self.TABLE_SALES_ORDER_FACT = "SalesOrderFact"
         self.TABLE_PURCH_AVG_PRICE_FACT = "PurchAvgPriceFact"
+        self.TABLE_CUSTOMER_DM = "CustomerDMFact"
 
         # Standard Constants
         self.DEFAULT_SALES_ORG = "1000"
