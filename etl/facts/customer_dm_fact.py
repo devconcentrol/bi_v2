@@ -68,7 +68,14 @@ class CustomerDMFactETL(BaseFactETL):
             + self._config.DEFAULT_DIVISION
             + results["kunnr_dm"]
         )
-        results["CustDMId"] = results["cust_key"].map(customer_map)
+        results["CustDMId"] = results["cust_key2"].map(customer_map)
+
+        missing_cust_dm_ids = results[results["CustDMId"].isna()]
+        if not missing_cust_dm_ids.empty:
+            Logger().warning(
+                f"Dropped {len(missing_cust_dm_ids)} rows due to missing CustDMId."
+            )
+            results = results.dropna(subset=["CustDMId"])
 
         # Rename columns, not necessary
         # results = results.rename(columns=self.COLUMN_MAPPING)
