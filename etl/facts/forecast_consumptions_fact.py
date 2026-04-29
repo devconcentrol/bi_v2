@@ -42,7 +42,9 @@ class ForecastConsumptionsFactETL(BaseFactETL):
             return first_day_current.replace(year=now.year + 1, month=1)
         return first_day_current.replace(month=now.month + 1)
 
-    def _transform_results(self, results: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
+    def _transform_results(
+        self, results: pd.DataFrame, cutoff_date: datetime
+    ) -> tuple[pd.DataFrame, list[str]]:
         results = results.copy()
         results.columns = results.columns.str.lower()
 
@@ -51,7 +53,10 @@ class ForecastConsumptionsFactETL(BaseFactETL):
         results["MaterialId"] = results["matnr"].map(material_map)
 
         missing_materials = (
-            results.loc[results["MaterialId"].isna(), "matnr"].astype(str).unique().tolist()
+            results.loc[results["MaterialId"].isna(), "matnr"]
+            .astype(str)
+            .unique()
+            .tolist()
         )
         results = results.dropna(subset=["MaterialId"])
 
@@ -61,6 +66,9 @@ class ForecastConsumptionsFactETL(BaseFactETL):
         results["ForecastDate"] = pd.to_datetime(
             results["bdter"].astype(str), format="%Y%m%d", errors="coerce"
         ).dt.date
+        results.loc[results["ForecastDate"] < cutoff_date.date(), "ForecastDate"] = (
+            cutoff_date.date()
+        )
         results["bdmng"] = pd.to_numeric(results["bdmng"], errors="coerce").fillna(0)
         results = results.rename(columns=self.COLUMN_MAPPING)
 
@@ -84,9 +92,9 @@ class ForecastConsumptionsFactETL(BaseFactETL):
                    MEINS,
                    BDTER,
                    BDMNG
-            FROM SAPSR3.ZCON_V_CONSUMPTION_FORECAST                             
-            WHERE BDTER >= :cutoff_sap
+            FROM SAPSR3.ZCON_V_CONSUMPTION_FORECAST                                         
         """
+        # -- WHERE BDTER >= :cutoff_sap
 
         results: pd.DataFrame = pd.read_sql(
             sql_get_forecast,
@@ -108,7 +116,7 @@ class ForecastConsumptionsFactETL(BaseFactETL):
             return
 
         # 4. Transform Data
-        results, missing_materials = self._transform_results(results)
+        results, missing_materials = self._transform_results(results, cutoff_date)
         if missing_materials:
             Logger().warning(
                 "Dropped %s rows due to missing MaterialId (%s).",
@@ -123,10 +131,8 @@ class ForecastConsumptionsFactETL(BaseFactETL):
                 self._update_etl_info(conn, "process_forecast_consumptions")
             return
 
-        insert_records = (
-            results
-            .where(pd.notnull(results), None)
-            .to_dict(orient="records")
+        insert_records = results.where(pd.notnull(results), None).to_dict(
+            orient="records"
         )
 
         # 5. Load Data to Data Warehouse
