@@ -1,3 +1,4 @@
+import numpy
 import pandas as pd
 from utils.error_handler import error_handler
 from utils.logger import Logger
@@ -28,6 +29,7 @@ class QMAdjustmentFactETL(BaseFactETL):
         "bdmng": "Qty",
         "meins": "UnitId",
         "cpd_updat": "CreatedDateTime",
+        "ltxa1": "ProcessAdjustment",
     }
 
     @error_handler
@@ -49,15 +51,17 @@ class QMAdjustmentFactETL(BaseFactETL):
                   MATNR_ADJ,
                   BDMNG,
                   MEINS,
-                  CPD_UPDAT                                    
+                  CPD_UPDAT,
+                  LTXA1                                    
             FROM SAPSR3.ZCON_V_QM_ADJUSTMENT            
-            WHERE GSTRP >= :cutoff_date
+            WHERE GSTRP >= :cutoff_date              
         """
 
         results: pd.DataFrame = pd.read_sql(
             sql_get_adjustments,
             con=self._con_sap,
             params={"cutoff_date": cutoff_date_sap},
+            dtype_backend="numpy_nullable",
         )
 
         if results.empty:
@@ -100,7 +104,9 @@ class QMAdjustmentFactETL(BaseFactETL):
         results["MaterialId"] = results["matnr"].map(material_map)
 
         results["matnr_adj"] = results["matnr_adj"].astype(str)
-        results["MaterialAdjId"] = results["matnr_adj"].map(material_map)
+        results["MaterialAdjId"] = (
+            results["matnr_adj"].map(material_map).astype("Int64")
+        )
 
         results = results.rename(columns=self.COLUMN_MAPPING)
 
@@ -117,6 +123,7 @@ class QMAdjustmentFactETL(BaseFactETL):
             Column("MaterialAdjId", Integer),
             Column("OrderType", String(10)),
             Column("CreatedDateTime", DateTime),
+            Column("ProcessAdjustment", String(100)),
         )
 
         final_cols = list(self.COLUMN_MAPPING.values())
