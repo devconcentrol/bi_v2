@@ -97,4 +97,5 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main(["run", "qm_adjustment_fact"]))
+    raise SystemExit(main())
+    # raise SystemExit(main(["run", "qm_adjustment_fact"]))
