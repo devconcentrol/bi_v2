@@ -91,8 +91,8 @@ class SalesFactETL(BaseFactETL):
                 ZVF.MATNR = M.MATNR
                 AND M.MANDT = '500'
             WHERE
-                ZVF.VBTYP <> 'U'
-                AND ERDAT = :yesterday
+                ZVF.VBTYP <> 'U'                
+            AND ERDAT = :yesterday
         """
 
         results: pd.DataFrame = pd.read_sql(
@@ -155,7 +155,7 @@ class SalesFactETL(BaseFactETL):
         # Logic for ECONOMIC_SALES_TYPE (ntgew = 0 if auart == ECONOMIC_SALES_TYPE)
         results.loc[
             (results["auart"] == self._config.ECONOMIC_SALES_TYPE).fillna(False),
-            "ntgew",
+            ["ntgew", "net_sales_cost", "net_profit_margin"],
         ] = 0
 
         # Lookups
