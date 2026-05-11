@@ -23,6 +23,7 @@ class ConsumptionCeCoFactETL(BaseFactETL):
         "menge": "Qty",
         "meins": "UnitId",
         "kostl": "CeCo",
+        "bwart": "MovementType",
     }
 
     @error_handler
@@ -41,7 +42,8 @@ class ConsumptionCeCoFactETL(BaseFactETL):
                                    MEINS,
                                    BUDAT_MKPF,
                                    MENGE,
-                                   KOSTL
+                                   KOSTL,
+                                   BWART
                             FROM SAPSR3.ZCON_V_CONSUMPTIONS_CECO                             
                             WHERE BUDAT_MKPF >= :cutoff_date_sap
                         """
@@ -73,6 +75,7 @@ class ConsumptionCeCoFactETL(BaseFactETL):
             Column("Qty", DECIMAL(15, 4)),
             Column("UnitId", String(10)),
             Column("CeCo", String(20)),
+            Column("MovementType", String(5)),
         )
 
         # Vectorized Date Parsing
