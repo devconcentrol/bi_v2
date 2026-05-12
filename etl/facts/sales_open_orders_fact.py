@@ -35,6 +35,8 @@ class SalesOpenOrdersFactETL(BaseFactETL):
         "waerk": "Currency",
         "audat": "CreatedDate",
         "auart": "SalesType",
+        "ztar": "ZtarAmount",
+        "ztra": "ZtraAmount",
     }
 
     @error_handler
@@ -62,7 +64,9 @@ class SalesOpenOrdersFactETL(BaseFactETL):
                                NETWR,
                                WAERK,
                                AUDAT,
-                               AUART
+                               AUART,
+                               ZTAR,
+                               ZTRA
                         FROM SAPSR3.ZCON_V_OPEN_SALES_ORDERS                                                    
                         WHERE VKORG = 1000                        
                         """
@@ -165,6 +169,8 @@ class SalesOpenOrdersFactETL(BaseFactETL):
             Column("Currency", String(10)),
             Column("CreatedDate", Date),
             Column("SalesType", String(10)),
+            Column("ZtarAmount", DECIMAL(15, 4)),
+            Column("ZtraAmount", DECIMAL(15, 4)),
         )
 
         # 6. Database Operations (Backup -> Truncate -> Insert)
