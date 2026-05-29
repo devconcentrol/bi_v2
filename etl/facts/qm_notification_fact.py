@@ -14,6 +14,7 @@ from sqlalchemy import (
     text,
     Insert,
     Date,
+    DECIMAL,
 )
 from etl.base_fact_etl import BaseFactETL
 
@@ -24,6 +25,10 @@ class QMNotificationFactETL(BaseFactETL):
         "MaterialId": "MaterialId",
         "charg": "BatchNumber",
         "qmdat": "NotificationDate",
+        "qmcod": "Codification",
+        "qmgrp": "CodeGroup",
+        "qmart": "Type",
+        "rkmng": "Qty",
     }
 
     def __init__(self, con_dw: Engine, con_sap: Engine, lookup: DimensionLookup):
@@ -40,13 +45,12 @@ class QMNotificationFactETL(BaseFactETL):
             SELECT QMNUM,
                   QMART,
                   QMGRP,
+                  QMCOD,
                   MATNR,
                   CHARG,
-                  QMDAT                  
-            FROM SAPSR3.ZCON_V_NOTIFICATIONS
-            WHERE QMART = 'ZI'
-              AND QMGRP = 'INC'
-              AND QMCOD = 'IN01'                                 
+                  QMDAT,
+                  RKMNG                 
+            FROM SAPSR3.ZCON_V_NOTIFICATIONS                             
         """
 
         results: pd.DataFrame = pd.read_sql(sql_get_notifications, con=self._con_sap)
@@ -54,17 +58,19 @@ class QMNotificationFactETL(BaseFactETL):
         if results.empty:
             Logger().info("No QM Notifications data found.")
             with self._con_dw.begin() as conn:
-                self._update_etl_info(conn, 'process_qm_notification')
+                self._update_etl_info(conn, "process_qm_notification")
             return
-        
+
         results.columns = results.columns.str.lower()
-        
-        results["qmdat"] = pd.to_datetime(results["qmdat"], format="%Y%m%d", errors="coerce").dt.date
-        
+
+        results["qmdat"] = pd.to_datetime(
+            results["qmdat"], format="%Y%m%d", errors="coerce"
+        ).dt.date
+
         material_map = self._lookup.get_material_map()
         results["matnr"] = results["matnr"].astype(str)
-        results["MaterialId"] = results["matnr"].map(material_map)
-        
+        results["MaterialId"] = results["matnr"].map(material_map).convert_dtypes()
+
         results = results.rename(columns=self.COLUMN_MAPPING)
 
         metadata = MetaData()
@@ -75,18 +81,34 @@ class QMNotificationFactETL(BaseFactETL):
             Column("MaterialId", Integer),
             Column("BatchNumber", String(50)),
             Column("NotificationDate", Date),
-        )        
-        
-        final_cols = list(self.COLUMN_MAPPING.values())        
-        insert_records = results[final_cols].where(pd.notnull(results), None).to_dict(orient="records")
+            Column("CodeGroup", String(100)),
+            Column("Type", String(100)),
+            Column("Codification", String(100)),
+            Column("Qty", DECIMAL),
+        )
+
+        final_cols = list(self.COLUMN_MAPPING.values())
+        insert_records = (
+            results[final_cols]
+            .where(pd.notnull(results[final_cols]), None)
+            .to_dict(orient="records")
+        )
+
+        #        for record in insert_records:
+        #            if pd.isna(record["MaterialId"]):
+        #                record["MaterialId"] = None
 
         stmt_insert: Insert = insert(qm_notification_table)
-        stmt_truncate = text(f"TRUNCATE TABLE {self._config.TABLE_QM_NOTIFICATION_FACT}")
+        stmt_truncate = text(
+            f"TRUNCATE TABLE {self._config.TABLE_QM_NOTIFICATION_FACT}"
+        )
 
         with self._con_dw.begin() as conn:
             if insert_records:
                 conn.execute(stmt_truncate)
-                Logger().info(f"Inserting {len(insert_records)} records into QM Notification Fact.")
+                Logger().info(
+                    f"Inserting {len(insert_records)} records into QM Notification Fact."
+                )
                 conn.execute(stmt_insert, insert_records)
-            
-            self._update_etl_info(conn, 'process_qm_notification')
+
+            self._update_etl_info(conn, "process_qm_notification")
