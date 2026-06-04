@@ -73,6 +73,8 @@ class Config:
         self.TABLE_SALES_ORDER_FACT = "SalesOrderFact"
         self.TABLE_PURCH_AVG_PRICE_FACT = "PurchAvgPriceFact"
         self.TABLE_CUSTOMER_DM = "CustomerDMFact"
+        self.TABLE_LAST_SALES_PRICE_FACT = "LastSalesPriceFact"
+        self.TABLE_NOTIFICATION_DEFECT_DIM = "NotificationDefectDim"
 
         # Standard Constants
         self.DEFAULT_SALES_ORG = "1000"

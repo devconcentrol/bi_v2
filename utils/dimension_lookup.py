@@ -22,24 +22,11 @@ class DimensionLookup:
     _subfamily_map: dict | None
     _material_status_map: dict | None
     _vendor_map: dict | None
+    _notification_defect_map: dict | None
 
     def __init__(self, con_dw: Engine):
         self._con_dw: Engine = con_dw
-        self._customer_map = None
-        self._material_map = None
-        self._agent_map = None
-        self._country_map = None
-        self._group_map = None
-        self._zone_map = None
-        self._region_map = None
-        self._cust_division_map = None
-        self._gamma_map = None
-        self._division_map = None
-        self._family_map = None
-        self._subfamily_map = None
-        self._material_status_map = None
-        self._vendor_map = None
-        self._production_area_map = None
+        self.invalidate_caches()
 
     def invalidate_caches(self) -> None:
         self._customer_map = None
@@ -59,9 +46,7 @@ class DimensionLookup:
         self._vendor_map = None
         self._material_map = None
         self._production_area_map = None
-
-    def invalidate_vendor_cache(self) -> None:
-        self._vendor_map = None
+        self._notification_defect_map = None
 
     def _load_production_areas(self) -> pd.DataFrame:
         Logger().info("Cache --> Loading production areas from DB")
@@ -143,6 +128,27 @@ class DimensionLookup:
             "SELECT MaterialStatusId, MaterialStatusCode FROM MaterialStatusDim"
         )
         return pd.read_sql(status_query, self._con_dw)
+
+    def _load_notification_defects(self) -> pd.DataFrame:
+        Logger().info("Cache --> Loading notification defects from DB")
+        defect_query = "SELECT  GroupCode, Code, DefectId FROM NotificationDefectDim"
+        return pd.read_sql(defect_query, self._con_dw)
+
+    def get_notification_defect_map(self) -> dict:
+        if self._notification_defect_map is not None:
+            return self._notification_defect_map
+
+        df_defects: pd.DataFrame = self._load_notification_defects()
+
+        # Cache the map for reuse
+        self._notification_defect_map = dict(
+            zip(
+                (df_defects.GroupCode + df_defects.Code).values,
+                df_defects.DefectId.values,
+            )
+        )
+
+        return self._notification_defect_map
 
     def get_customer_map(self) -> dict:
         if self._customer_map is not None:

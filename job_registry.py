@@ -18,6 +18,7 @@ from etl.dimensions.contact_dim import ContactDim
 from etl.dimensions.customer_dim import CustomerDim
 from etl.dimensions.material_dim import MaterialDim
 from etl.dimensions.vendor_dim import VendorDim
+from etl.dimensions.notificactions_defect_dim import NotificationDefectDim
 from etl.facts.document_flow_fact import DocumentFlowFactETL
 from etl.facts.ewm_locations_fact import EWMLocationsFactETL
 from etl.facts.ewm_task_fact import EWMTasksFactETL
@@ -32,6 +33,7 @@ from etl.facts.production_data_fact import ProductionDataFactETL
 from etl.facts.production_orders_state_change_fact import (
     ProductonOrdersStateChangeFactETL,
 )
+from etl.facts.last_sales_price_fact import LastSalesPriceFactETL
 from etl.facts.purch_average_price_fact import PurchAvgPriceFactETL
 from etl.facts.purch_delivery_date_fact import PurchDeliveryDateFactETL
 from etl.facts.purchase_movements_fact import PurchaseMovementsFactETL
@@ -188,6 +190,12 @@ def _build_job_factories(context: RuntimeContext) -> dict[str, Callable[[], None
             context.con_dw, context.con_sap, context.lookup
         ).run,
         "customer_dm_fact": CustomerDMFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "last_sales_price_fact": LastSalesPriceFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "notification_defect_dim": NotificationDefectDim(
             context.con_dw, context.con_sap, context.lookup
         ).run,
     }

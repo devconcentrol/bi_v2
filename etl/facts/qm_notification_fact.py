@@ -29,6 +29,7 @@ class QMNotificationFactETL(BaseFactETL):
         "qmgrp": "CodeGroup",
         "qmart": "Type",
         "rkmng": "Qty",
+        "DefectId": "DefectId",
     }
 
     def __init__(self, con_dw: Engine, con_sap: Engine, lookup: DimensionLookup):
@@ -46,11 +47,16 @@ class QMNotificationFactETL(BaseFactETL):
                   QMART,
                   QMGRP,
                   QMCOD,
+                  FEGRP,
+                  FECOD,
                   MATNR,
                   CHARG,
                   QMDAT,
                   RKMNG                 
-            FROM SAPSR3.ZCON_V_NOTIFICATIONS                             
+            FROM SAPSR3.ZCON_V_NOTIFICATIONS 
+            WHERE (QMART = 'ZI' AND QMCOD = 'IN01')
+               OR (QMART = 'ZC' AND QMCOD = 'RC2')
+                                        
         """
 
         results: pd.DataFrame = pd.read_sql(sql_get_notifications, con=self._con_sap)
@@ -71,6 +77,12 @@ class QMNotificationFactETL(BaseFactETL):
         results["matnr"] = results["matnr"].astype(str)
         results["MaterialId"] = results["matnr"].map(material_map).convert_dtypes()
 
+        defect_map = self._lookup.get_notification_defect_map()
+        results["fegrp"] = results["fegrp"].astype(str)
+        results["fecod"] = results["fecod"].astype(str)
+        results["defect_key"] = results["fegrp"] + results["fecod"]
+        results["DefectId"] = results["defect_key"].map(defect_map).convert_dtypes()
+
         results = results.rename(columns=self.COLUMN_MAPPING)
 
         metadata = MetaData()
@@ -85,6 +97,7 @@ class QMNotificationFactETL(BaseFactETL):
             Column("Type", String(100)),
             Column("Codification", String(100)),
             Column("Qty", DECIMAL),
+            Column("DefectId", Integer),
         )
 
         final_cols = list(self.COLUMN_MAPPING.values())

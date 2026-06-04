@@ -57,7 +57,7 @@ class CustomerDim:
         self._config = Config.get_instance()
 
     @error_handler
-    def run(self):       
+    def run(self):
         yesterday = (date.today() - timedelta(days=1)).strftime("%Y%m%d")
         Logger().info(f"Processing customers for date: {yesterday}")
 
@@ -65,13 +65,18 @@ class CustomerDim:
             f"UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() WHERE ETL = 'process_customers'"
         )
 
-        sql_get_customers = f"""
+        sql_get_customers = """
                             SELECT KUNNR, NAME, VKORG, VTWEG, SPART, LAND1, BZIRK, KDGRP, ZR, ZE, CRDAT, REGIO, HKUNNR, 
                                    KTOKD, TAXNUM, PSTLZ, ORT01, KVGR2, ADDRESS, CHDAT
                             FROM SAPSR3.ZCON_V_CUSTOMER                            
                             WHERE CHDAT = :yesterday                            
                         """
-        results: pd.DataFrame = pd.read_sql(sql_get_customers, self._con_sap, params = {"yesterday": yesterday},dtype_backend="numpy_nullable")
+        results: pd.DataFrame = pd.read_sql(
+            sql_get_customers,
+            self._con_sap,
+            params={"yesterday": yesterday},
+            dtype_backend="numpy_nullable",
+        )
 
         if results.empty:
             Logger().info("No customers found for processing")
@@ -81,7 +86,7 @@ class CustomerDim:
             return
 
         # normalize column names to lowercase to make downstream accesses predictable
-        results.columns = results.columns.str.lower()       
+        results.columns = results.columns.str.lower()
 
         metadata: MetaData = MetaData()
         # Define CustomerDim Table
@@ -123,8 +128,12 @@ class CustomerDim:
 
         # Transformation
         results["name"] = results["name"].str.replace(CRLF, "", regex=False)
-        results["crdat"] = pd.to_datetime(results["crdat"], format="%Y%m%d", errors="coerce").dt.date
-        results["chdat"] = pd.to_datetime(results["chdat"], format="%Y%m%d", errors="coerce").dt.date
+        results["crdat"] = pd.to_datetime(
+            results["crdat"], format="%Y%m%d", errors="coerce"
+        ).dt.date
+        results["chdat"] = pd.to_datetime(
+            results["chdat"], format="%Y%m%d", errors="coerce"
+        ).dt.date
 
         # Lookups
         results["search_key"] = (
@@ -171,8 +180,8 @@ class CustomerDim:
         results["RegionId"] = results["region_key"].map(region_map)
 
         # Replace nan values with None
-        results.replace(float('nan'), None, inplace=True)
-        
+        results.replace(float("nan"), None, inplace=True)
+
         # Split into updates and inserts
         updates_df = results[results["CustId"].notna()]
         inserts_df = results[results["CustId"].isna()]
@@ -181,7 +190,9 @@ class CustomerDim:
 
         # Build update values dynamically using COLUMN_MAPPING
         update_values = {
-            db_col: bindparam(f"b_{db_col}") for db_col in self.COLUMN_MAPPING.keys() if db_col not in ["CustCode", "CreatedDate"]
+            db_col: bindparam(f"b_{db_col}")
+            for db_col in self.COLUMN_MAPPING.keys()
+            if db_col not in ["CustCode", "CreatedDate"]
         }
         stmt_update_customers: Update = (
             update(customer_table)
@@ -195,10 +206,11 @@ class CustomerDim:
                 # We rename DataFrame columns to match bindparams (b_ColName)
                 rename_dict = {
                     df_col: f"b_{db_col}"
-                    for db_col, df_col in self.COLUMN_MAPPING.items() if db_col not in ["CustCode", "CreatedDate"]
+                    for db_col, df_col in self.COLUMN_MAPPING.items()
+                    if db_col not in ["CustCode", "CreatedDate"]
                 }
                 rename_dict["CustId"] = "b_CustId"  # Key for update
-                                
+
                 update_data = updates_df.rename(columns=rename_dict)[
                     list(rename_dict.values())
                 ].to_dict(orient="records")
@@ -212,7 +224,7 @@ class CustomerDim:
                 rename_dict_insert = {
                     df_col: db_col for db_col, df_col in self.COLUMN_MAPPING.items()
                 }
-                
+
                 insert_data = inserts_df.rename(columns=rename_dict_insert)[
                     list(rename_dict_insert.values())
                 ].to_dict(orient="records")
