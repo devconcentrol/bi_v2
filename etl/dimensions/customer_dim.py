@@ -47,6 +47,7 @@ class CustomerDim:
         "Type": "ktokd",
         "CustDivisionId": "CustDivisionId",  # Mapped column
         "ModifiedDate": "chdat",
+        "PriceGroup": "konda",
         # "CustId" is handled separately as it determines insert vs update
     }
 
@@ -67,7 +68,7 @@ class CustomerDim:
 
         sql_get_customers = """
                             SELECT KUNNR, NAME, VKORG, VTWEG, SPART, LAND1, BZIRK, KDGRP, ZR, ZE, CRDAT, REGIO, HKUNNR, 
-                                   KTOKD, TAXNUM, PSTLZ, ORT01, KVGR2, ADDRESS, CHDAT
+                                   KTOKD, TAXNUM, PSTLZ, ORT01, KVGR2, ADDRESS, CHDAT, KONDA
                             FROM SAPSR3.ZCON_V_CUSTOMER                            
                             WHERE CHDAT = :yesterday                            
                         """
@@ -115,6 +116,7 @@ class CustomerDim:
             Column("Type", String(10)),
             Column("ModifiedDate", Date),
             Column("CustDivisionId", Integer, nullable=True),
+            Column("PriceGroup", String(10), nullable=True),
         )
 
         # Prepare maps
