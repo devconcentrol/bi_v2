@@ -37,6 +37,7 @@ class SalesOpenOrdersFactETL(BaseFactETL):
         "auart": "SalesType",
         "ztar": "ZtarAmount",
         "ztra": "ZtraAmount",
+        "currency_conversion_rate": "ConRate",
     }
 
     @error_handler
@@ -66,7 +67,8 @@ class SalesOpenOrdersFactETL(BaseFactETL):
                                AUDAT,
                                AUART,
                                ZTAR,
-                               ZTRA
+                               ZTRA,
+                               CURRENCY_CONVERSION_RATE
                         FROM SAPSR3.ZCON_V_OPEN_SALES_ORDERS                                                    
                         WHERE VKORG = 1000                        
                         """
@@ -171,6 +173,7 @@ class SalesOpenOrdersFactETL(BaseFactETL):
             Column("SalesType", String(10)),
             Column("ZtarAmount", DECIMAL(15, 4)),
             Column("ZtraAmount", DECIMAL(15, 4)),
+            Column("ConRate", DECIMAL(15, 4)),
         )
 
         # 6. Database Operations (Backup -> Truncate -> Insert)
