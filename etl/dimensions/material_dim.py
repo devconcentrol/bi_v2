@@ -43,6 +43,7 @@ class MaterialDim:
         "CreatedDate": "ersda",
         "MaterialStatusId": "MaterialStatusId",  # Mapped
         "ShelfLife": "mhdhb",
+        "HalbMaterialId": "HalbMaterialId",  # Mapped
     }
 
     def __init__(self, con_dw: Engine, con_sap: Engine, lookup: DimensionLookup):
@@ -110,10 +111,13 @@ class MaterialDim:
             Column("CreatedDate", Date),
             Column("MaterialStatusId", Integer),
             Column("ShelfLife", Integer),
+            Column("HalbMaterialId", Integer),
         )
 
         # Transformation & Vectorization
         results["matnr"] = results["matnr"].astype(str)
+
+        results["halb"] = results["matnr"].str.split("+").str[0]
 
         # Product Hierarchy Parsing
         # PRDHA structure: Gamma(2) + Division(3) + Family(4) + SubFamily(remaining)
@@ -160,6 +164,8 @@ class MaterialDim:
         material_map = self._lookup.get_material_map()
         results["MaterialId"] = results["matnr"].map(material_map)
 
+        results["HalbMaterialId"] = results["halb"].map(material_map)
+
         # Replace nan values with None
         results.replace(float("nan"), None, inplace=True)
 
@@ -173,7 +179,7 @@ class MaterialDim:
         update_values = {
             db_col: bindparam(f"b_{db_col}")
             for db_col, df_col in self.COLUMN_MAPPING.items()
-            if db_col not in ["MaterialCode", "CreatedDate"]
+            if db_col not in ["MaterialCode", "CreatedDate", "HalbMaterialId"]
         }
 
         stmt_update_materials: Update = (
@@ -187,7 +193,7 @@ class MaterialDim:
                 rename_dict = {
                     df_col: f"b_{db_col}"
                     for db_col, df_col in self.COLUMN_MAPPING.items()
-                    if db_col not in ["MaterialCode", "CreatedDate"]
+                    if db_col not in ["MaterialCode", "CreatedDate", "HalbMaterialId"]
                 }
                 rename_dict["MaterialId"] = "b_MaterialId"
 
