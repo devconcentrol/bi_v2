@@ -1,5 +1,4 @@
 import pandas as pd
-from pandas._libs import Timestamp
 from datetime import date, timedelta
 from zoneinfo import ZoneInfo
 from utils.error_handler import error_handler

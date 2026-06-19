@@ -56,6 +56,7 @@ from utils.job_runner import safe_run_job
 from utils.logger import Logger
 from etl.facts.vendor_assesment_fact import VendorAssesmentFactETL
 from etl.facts.customer_dm_fact import CustomerDMFactETL
+from etl.facts.fi_open_items import FinanceOpenItemsFactETL
 
 
 @dataclass(frozen=True)
@@ -70,6 +71,7 @@ class JobDefinition:
     name: str
     times: tuple[str, ...]
     runner: Callable[[], None]
+    frequency: str = "daily"
 
 
 @dataclass(frozen=True)
@@ -77,6 +79,7 @@ class JobConfigEntry:
     name: str
     enabled: bool
     times: tuple[str, ...]
+    frequency: str = "daily"
 
 
 def _build_job_factories(context: RuntimeContext) -> dict[str, Callable[[], None]]:
@@ -198,6 +201,9 @@ def _build_job_factories(context: RuntimeContext) -> dict[str, Callable[[], None
         "notification_defect_dim": NotificationDefectDim(
             context.con_dw, context.con_sap, context.lookup
         ).run,
+        "fi_open_items_fact": FinanceOpenItemsFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
     }
 
 
@@ -233,6 +239,7 @@ def load_job_config(
         name = raw_job.get("name")
         enabled = raw_job.get("enabled", True)
         times = raw_job.get("times", [])
+        frequency = raw_job.get("frequency", "daily")
 
         if not isinstance(name, str) or not name:
             raise ValueError(
@@ -259,7 +266,11 @@ def load_job_config(
             _validate_time_format(scheduled_time)
 
         seen_names.add(name)
-        entries.append(JobConfigEntry(name=name, enabled=enabled, times=tuple(times)))
+        entries.append(
+            JobConfigEntry(
+                name=name, enabled=enabled, times=tuple(times), frequency=frequency
+            )
+        )
 
     return entries
 
@@ -276,6 +287,7 @@ def build_job_definitions(
             name=entry.name,
             times=entry.times,
             runner=job_factories[entry.name],
+            frequency=entry.frequency,
         )
         for entry in job_config
         if entry.enabled
@@ -288,12 +300,24 @@ def register_jobs(scheduler, jobs: list[JobDefinition]) -> None:
     logger = Logger()
     for job in jobs:
         for scheduled_time in job.times:
-            logger.info("Registering job '%s' at %s", job.name, scheduled_time)
-            scheduler.every().day.at(scheduled_time).do(
-                safe_run_job,
-                job_name=job.name,
-                job_callable=job.runner,
+            logger.info(
+                "Registering job '%s' frequency %s at %s",
+                job.name,
+                job.frequency,
+                scheduled_time,
             )
+            if job.frequency == "daily":
+                scheduler.every().day.at(scheduled_time).do(
+                    safe_run_job,
+                    job_name=job.name,
+                    job_callable=job.runner,
+                )
+            elif job.frequency == "weekly":
+                scheduler.every().monday.at(scheduled_time).do(
+                    safe_run_job,
+                    job_name=job.name,
+                    job_callable=job.runner,
+                )
 
 
 def get_job_by_name(jobs: list[JobDefinition], job_name: str) -> JobDefinition | None:

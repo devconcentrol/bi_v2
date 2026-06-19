@@ -75,6 +75,7 @@ class Config:
         self.TABLE_CUSTOMER_DM = "CustomerDMFact"
         self.TABLE_LAST_SALES_PRICE_FACT = "LastSalesPriceFact"
         self.TABLE_NOTIFICATION_DEFECT_DIM = "NotificationDefectDim"
+        self.TABLE_FI_OPEN_ITEMS_FACT = "FinanceOpenItemsFact"
 
         # Standard Constants
         self.DEFAULT_SALES_ORG = "1000"
