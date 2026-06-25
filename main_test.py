@@ -53,6 +53,7 @@ def _build_runtime(
 
 
 def _list_jobs(jobs: list) -> int:
+    jobs.sort(key=lambda job: job.name)
     for job in jobs:
         times = ", ".join(job.times)
         print(f"{job.name}: {times}")
