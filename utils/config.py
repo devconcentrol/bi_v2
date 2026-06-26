@@ -22,6 +22,10 @@ class Config:
         self.COSTING_PATH = os.getenv("COSTING_PATH")
         self.JOB_CONFIG_PATH = os.getenv("JOB_CONFIG_PATH", "jobs_config.json")
 
+        # Whatsapp API Key
+        self.API_KEY = os.getenv("API_KEY")
+        self.API_URL = os.getenv("API_URL")
+
         # Validation
         if not self.HANA_CONNECTION:
             raise ValueError("HANA_CONNECTION not set in environment.")

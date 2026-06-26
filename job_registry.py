@@ -57,6 +57,7 @@ from utils.logger import Logger
 from etl.facts.vendor_assesment_fact import VendorAssesmentFactETL
 from etl.facts.customer_dm_fact import CustomerDMFactETL
 from etl.facts.fi_open_items import FinanceOpenItemsFactETL
+from utils.result_sender import ResultSender
 
 
 @dataclass(frozen=True)
@@ -204,6 +205,7 @@ def _build_job_factories(context: RuntimeContext) -> dict[str, Callable[[], None
         "fi_open_items_fact": FinanceOpenItemsFactETL(
             context.con_dw, context.con_sap, context.lookup
         ).run,
+        "result_sender": ResultSender(context.con_dw).send_result,
     }
 
 

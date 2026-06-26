@@ -354,6 +354,14 @@
         "04:45"
       ],
       "frequency": "weekly"
+    },
+    {
+      "name": "result_sender",
+      "enabled": true,
+      "times": [
+        "07:00"
+      ],
+      "frequency": "daily"
     }
   ]
 }
