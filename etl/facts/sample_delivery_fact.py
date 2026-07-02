@@ -33,6 +33,7 @@ class SampleDeliveryFactETL(BaseFactETL):
         "lfimg": "Qty",
         "lsmeng": "QtyOrdered",
         "erdat": "CreatedDate",
+        "hubspotopportunity": "HubspotOpportunity",
     }
 
     @error_handler
@@ -59,6 +60,7 @@ class SampleDeliveryFactETL(BaseFactETL):
             Column("Qty", DECIMAL(15, 4)),
             Column("QtyOrdered", DECIMAL(15, 4)),
             Column("CreatedDate", Date),
+            Column("HubspotOpportunity", String(15)),
         )
 
         # ---------------------------------------------------------
@@ -111,7 +113,7 @@ class SampleDeliveryFactETL(BaseFactETL):
         # 2. Delta Load: Fetch modified/new records from SAP
         # ---------------------------------------------------------
         sql_get_deliveries = """
-            SELECT LFART, VBELN, MATNR, WADAT, WADAT_IST, WBSTK, KUNNR, VKORG, SPART, VTWEG, SALESID, LFIMG, AEDAT, ERDAT, LSMENG
+            SELECT LFART, VBELN, MATNR, WADAT, WADAT_IST, WBSTK, KUNNR, VKORG, SPART, VTWEG, SALESID, LFIMG, AEDAT, ERDAT, LSMENG,HUBSPOTOPPORTUNITY
             FROM SAPSR3.ZCON_V_SAMPLE_ORDERS
             WHERE VKORG = '1000' AND AEDAT = :yesterday
         """
