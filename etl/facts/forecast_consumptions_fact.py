@@ -92,7 +92,10 @@ class ForecastConsumptionsFactETL(BaseFactETL):
                    MEINS,
                    BDTER,
                    BDMNG
-            FROM SAPSR3.ZCON_V_CONSUMPTION_FORECAST                                         
+            FROM SAPSR3.ZCON_V_CONSUMPTION_FORECAST       
+            WHERE PLSCN = '001' 
+	          AND MD.MANDT = '500'
+	          AND M.MTART IN ('ROH',	'LEER',	'ENV')                                  
         """
         # -- WHERE BDTER >= :cutoff_sap
 
