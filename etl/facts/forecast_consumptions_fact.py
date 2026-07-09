@@ -82,7 +82,6 @@ class ForecastConsumptionsFactETL(BaseFactETL):
         now = datetime.now()
         cutoff_date = self._calculate_cutoff_date(now)
 
-        cutoff_sap = cutoff_date.strftime("%Y%m%d")
         cutoff_dw = cutoff_date.strftime("%Y-%m-%d")
 
         # 2. Extract Data from SAP
@@ -93,16 +92,14 @@ class ForecastConsumptionsFactETL(BaseFactETL):
                    BDTER,
                    BDMNG
             FROM SAPSR3.ZCON_V_CONSUMPTION_FORECAST       
-            WHERE PLSCN = '001' 
-	          AND MD.MANDT = '500'
-	          AND M.MTART IN ('ROH',	'LEER',	'ENV')                                  
+            WHERE PLSCN = '001' 	          
+	          AND MTART IN ('ROH','LEER','ENV')                                  
         """
         # -- WHERE BDTER >= :cutoff_sap
 
         results: pd.DataFrame = pd.read_sql(
             sql_get_forecast,
             con=self._con_sap,
-            params={"cutoff_sap": cutoff_sap},
             dtype_backend="numpy_nullable",
         )
 

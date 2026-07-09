@@ -22,7 +22,8 @@ class FinanceOpenItemsFactETL(BaseFactETL):
         "wrbtr": "Amount",
         "waers": "Currency",
         "bukrs": "CompanyCode",
-        "max_days": "Days",
+        "days": "Days",
+        "belnr": "InvoiceNumber",
     }
 
     @error_handler
@@ -36,7 +37,8 @@ class FinanceOpenItemsFactETL(BaseFactETL):
                                WRBTR,
                                WAERS,
                                BUKRS,
-                               MAX_DAYS                               
+                               DAYS,
+                               BELNR                               
                         FROM SAPSR3.ZCON_V_CARTERA
                         WHERE BUKRS = '1000'
                         """
@@ -92,6 +94,7 @@ class FinanceOpenItemsFactETL(BaseFactETL):
             Column("Currency", String(10)),
             Column("CompanyCode", String(4)),
             Column("Days", Integer),
+            Column("InvoiceNumber", String(20)),
         )
 
         stmt_insert: Insert = insert(target_table)

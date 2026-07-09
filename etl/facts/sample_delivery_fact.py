@@ -72,11 +72,11 @@ class SampleDeliveryFactETL(BaseFactETL):
         # Start of current month, one year ago
         first_day_current = today.replace(day=1)
         start_date = first_day_current - pd.DateOffset(years=1)
-        yesterday = today - pd.DateOffset(days=1)
+        cutoff_date = today - pd.DateOffset(days=15)
 
         start_date_str = start_date.strftime("%Y-%m-%d")
         start_date_sap = start_date.strftime("%Y%m%d")
-        yesterday_sap = yesterday.strftime("%Y%m%d")
+        cutoff_date_sap = cutoff_date.strftime("%Y%m%d")
 
         # Existing deliveries in DW (recent window)
         open_deliveries_query = f"""
@@ -115,12 +115,12 @@ class SampleDeliveryFactETL(BaseFactETL):
         sql_get_deliveries = """
             SELECT LFART, VBELN, MATNR, WADAT, WADAT_IST, WBSTK, KUNNR, VKORG, SPART, VTWEG, SALESID, LFIMG, AEDAT, ERDAT, LSMENG,HUBSPOTOPPORTUNITY
             FROM SAPSR3.ZCON_V_SAMPLE_ORDERS
-            WHERE VKORG = '1000' AND AEDAT = :yesterday
+            WHERE VKORG = '1000' AND AEDAT >= :cuttoff_date
         """
         results: pd.DataFrame = pd.read_sql(
             sql_get_deliveries,
             con=self._con_sap,
-            params={"yesterday": yesterday_sap},
+            params={"cuttoff_date": cutoff_date_sap},
             dtype_backend="numpy_nullable",
         )
 
