@@ -22,20 +22,22 @@ class ConsumptionFactETL(BaseFactETL):
         "MaterialId": "MaterialId",
         "menge": "Qty",
         "meins": "UnitId",
+        "lgort": "WarehouseNumber",
     }
 
     @error_handler
     def run(self) -> None:
         Logger().info("Processing Consumption Fact...")
 
-        # Calculate start date in Python (Start of current month - 2 months)
+        # Calculate start date in Python (Start of current month - 3 months)
         today = pd.Timestamp.now()
         first_day_current = today.replace(day=1)
         cutoff_date = first_day_current - pd.DateOffset(months=3)
         cutoff_date_sap = cutoff_date.strftime("%Y%m%d")
 
         sql_get_consumption = """
-                            SELECT WERKS,                                                                                                                                            
+                            SELECT WERKS,  
+                                   LGORT,                                                                                                                                          
                                    MATNR,                                   
                                    MEINS,
                                    BUDAT_MKPF,
@@ -70,6 +72,7 @@ class ConsumptionFactETL(BaseFactETL):
             Column("MaterialId", String(15)),
             Column("Qty", DECIMAL(15, 4)),
             Column("UnitId", String(10)),
+            Column("WarehouseNumber", String(10)),
         )
 
         # Vectorized Date Parsing

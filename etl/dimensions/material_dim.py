@@ -66,7 +66,7 @@ class MaterialDim:
                             SELECT MATNR, MAKTX, MTART, EISBE, MINBE, MABST, EKGRP, PRDHA, LVORM, NETWEIGHT ,
                                    ERSDA, PLIFZ, MSTAE, MHDHB
                             FROM SAPSR3.ZCON_V_MATERIAL                              
-                            WHERE LAEDA = :yesterday
+                            WHERE LAEDA >= :yesterday
                         """
         results: pd.DataFrame = pd.read_sql(
             sql_get_materials, con=self._con_sap, params={"yesterday": yesterday}

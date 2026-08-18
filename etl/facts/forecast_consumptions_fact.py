@@ -20,6 +20,8 @@ class ForecastConsumptionsFactETL(BaseFactETL):
     ETL for Consumption Forecast Fact.
     Inherits from BaseFactETL and uses vectorized operations for efficiency.
     Dates are calculated in Python for better clarity.
+    Se ejecuta a mano ya que solo debería ejectuarse si hay variaciones en la previsión (SAP)
+    Importante la constante MES ya que solo en el primer mes debe sumar la previsión del mes anterior.
     """
 
     # Mapping: SAP Column -> Table Column
@@ -31,16 +33,12 @@ class ForecastConsumptionsFactETL(BaseFactETL):
         "meins": "UnitId",
     }
 
+    # IMPORTANTE MODIFICAR ESTO SEGÚN EL PRIMER MES DE LA PREVISIÓN QUE SE ESTÉ CARGANDO.
+    MES = 8  # Primer mes de la previsión (1-12)
+
     @staticmethod
-    def _calculate_cutoff_date(now: datetime) -> datetime:
-        first_day_current = now.replace(
-            day=1, hour=0, minute=0, second=0, microsecond=0
-        )
-        if now.day <= 15:
-            return first_day_current
-        if now.month == 12:
-            return first_day_current.replace(year=now.year + 1, month=1)
-        return first_day_current.replace(month=now.month + 1)
+    def _calculate_cutoff_date(month: int) -> datetime:
+        return datetime(datetime.now().year, month, 1)
 
     def _transform_results(
         self, results: pd.DataFrame, cutoff_date: datetime
@@ -66,6 +64,7 @@ class ForecastConsumptionsFactETL(BaseFactETL):
         results["ForecastDate"] = pd.to_datetime(
             results["bdter"].astype(str), format="%Y%m%d", errors="coerce"
         ).dt.date
+
         results.loc[results["ForecastDate"] < cutoff_date.date(), "ForecastDate"] = (
             cutoff_date.date()
         )
@@ -79,8 +78,7 @@ class ForecastConsumptionsFactETL(BaseFactETL):
         Logger().info("Processing Forecast Consumptions Fact...")
 
         # 1. Date Calculation in Python
-        now = datetime.now()
-        cutoff_date = self._calculate_cutoff_date(now)
+        cutoff_date = self._calculate_cutoff_date(self.MES)
 
         cutoff_dw = cutoff_date.strftime("%Y-%m-%d")
 
@@ -95,7 +93,6 @@ class ForecastConsumptionsFactETL(BaseFactETL):
             WHERE PLSCN = '001' 	          
 	          AND MTART IN ('ROH','LEER','ENV')                                  
         """
-        # -- WHERE BDTER >= :cutoff_sap
 
         results: pd.DataFrame = pd.read_sql(
             sql_get_forecast,

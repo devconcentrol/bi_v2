@@ -70,7 +70,7 @@ class CustomerDim:
                             SELECT KUNNR, NAME, VKORG, VTWEG, SPART, LAND1, BZIRK, KDGRP, ZR, ZE, CRDAT, REGIO, HKUNNR, 
                                    KTOKD, TAXNUM, PSTLZ, ORT01, KVGR2, ADDRESS, CHDAT, KONDA
                             FROM SAPSR3.ZCON_V_CUSTOMER                            
-                            WHERE CHDAT = :yesterday                            
+                            WHERE CHDAT >= :yesterday                            
                         """
         results: pd.DataFrame = pd.read_sql(
             sql_get_customers,

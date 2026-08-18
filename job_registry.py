@@ -58,6 +58,7 @@ from etl.facts.vendor_assesment_fact import VendorAssesmentFactETL
 from etl.facts.customer_dm_fact import CustomerDMFactETL
 from etl.facts.fi_open_items import FinanceOpenItemsFactETL
 from utils.result_sender import ResultSender
+from etl.facts.forecast_requirements_source import ForecastRequirementsSourceETL
 
 
 @dataclass(frozen=True)
@@ -206,6 +207,9 @@ def _build_job_factories(context: RuntimeContext) -> dict[str, Callable[[], None
             context.con_dw, context.con_sap, context.lookup
         ).run,
         "result_sender": ResultSender(context.con_dw).send_result,
+        "forecast_requirements_source_fact": ForecastRequirementsSourceETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
     }
 
 
@@ -280,6 +284,7 @@ def load_job_config(
 def build_job_definitions(
     context: RuntimeContext,
     config_path: str | None = None,
+    include_disabled: bool = False,
 ) -> list[JobDefinition]:
     job_factories = _build_job_factories(context)
     job_config = load_job_config(config_path, set(job_factories))
@@ -292,7 +297,7 @@ def build_job_definitions(
             frequency=entry.frequency,
         )
         for entry in job_config
-        if entry.enabled
+        if entry.enabled or include_disabled
     ]
 
     return jobs

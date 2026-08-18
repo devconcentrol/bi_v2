@@ -47,7 +47,7 @@ def _build_runtime(
         con_sap=con_hana,
         lookup=lookup,
     )
-    jobs = build_job_definitions(context, config_path)
+    jobs = build_job_definitions(context, config_path, include_disabled=True)
 
     return jobs, con_hana, con_datawarehouse
 
@@ -99,4 +99,4 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-    # raise SystemExit(main(["run", "qm_adjustment_fact"]))
+    # raise SystemExit(main(["run", "forecast_requirements_source_fact"]))
