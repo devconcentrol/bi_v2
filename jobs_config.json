@@ -376,6 +376,14 @@
         "04:00"
       ],
       "frequency": "daily"
+    },
+    {
+      "name": "fi_monthly_expenses_fact",
+      "enabled": true,
+      "times": [
+        "04:00"
+      ],
+      "frequency": "weekly"
     }
   ]
 }

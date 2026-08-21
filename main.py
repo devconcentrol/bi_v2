@@ -4,9 +4,9 @@ import schedule
 from sqlalchemy import Engine, create_engine
 
 from job_registry import RuntimeContext, build_job_definitions, register_jobs
+from utils.config import Config
 from utils.dimension_lookup import DimensionLookup
 from utils.logger import Logger
-from utils.config import Config
 
 
 def main() -> None:

@@ -1,25 +1,27 @@
-import pandas as pd
 from datetime import datetime, timedelta
-from utils.error_handler import error_handler
-from utils.dimension_lookup import DimensionLookup
-from utils.logger import Logger
-from utils.config import Config
+
+import pandas as pd
 from sqlalchemy import (
-    MetaData,
-    Table,
     Column,
-    Integer,
-    String,
+    Date,
+    Delete,
     Engine,
+    Insert,
+    Integer,
+    MetaData,
+    String,
+    Table,
+    bindparam,
+    delete,
     insert,
     text,
-    Insert,
-    Delete,
-    delete,
-    bindparam,
-    Date,
 )
+
 from etl.base_fact_etl import BaseFactETL
+from utils.config import Config
+from utils.dimension_lookup import DimensionLookup
+from utils.error_handler import error_handler
+from utils.logger import Logger
 
 
 class QMSampleFactETL(BaseFactETL):

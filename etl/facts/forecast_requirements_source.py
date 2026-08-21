@@ -1,8 +1,8 @@
 import pandas as pd
 from sqlalchemy import (
+    DECIMAL,
     Column,
     Date,
-    DECIMAL,
     Integer,
     MetaData,
     String,
@@ -10,6 +10,7 @@ from sqlalchemy import (
     insert,
     text,
 )
+
 from etl.base_fact_etl import BaseFactETL
 from utils.error_handler import error_handler
 from utils.logger import Logger

@@ -8,24 +8,28 @@ from typing import Callable
 
 from sqlalchemy import Engine
 
-from etl.facts.availability_calculation_fact import AvailabilityCalculationFactETL
-from etl.facts.consumption_ceco_fact import ConsumptionCeCoFactETL
-from etl.facts.consumption_fact import ConsumptionFactETL
-from etl.facts.costing_fact import CostingFactETL
-from etl.facts.customer_price_fact import CustomerPriceFactETL
 from etl.dimensions.agent_dim import AgentDim
 from etl.dimensions.contact_dim import ContactDim
 from etl.dimensions.customer_dim import CustomerDim
 from etl.dimensions.material_dim import MaterialDim
-from etl.dimensions.vendor_dim import VendorDim
 from etl.dimensions.notificactions_defect_dim import NotificationDefectDim
+from etl.dimensions.vendor_dim import VendorDim
+from etl.facts.availability_calculation_fact import AvailabilityCalculationFactETL
+from etl.facts.consumption_ceco_fact import ConsumptionCeCoFactETL
+from etl.facts.consumption_fact import ConsumptionFactETL
+from etl.facts.costing_fact import CostingFactETL
+from etl.facts.customer_dm_fact import CustomerDMFactETL
+from etl.facts.customer_price_fact import CustomerPriceFactETL
 from etl.facts.document_flow_fact import DocumentFlowFactETL
 from etl.facts.ewm_locations_fact import EWMLocationsFactETL
 from etl.facts.ewm_task_fact import EWMTasksFactETL
 from etl.facts.extended_batch_stock_fact import ExtendedBatchStockFactETL
 from etl.facts.extended_stock_fact import ExtendedStockFactETL
+from etl.facts.fi_open_items import FinanceOpenItemsFactETL
 from etl.facts.forecast_consumptions_fact import ForecastConsumptionsFactETL
+from etl.facts.forecast_requirements_source import ForecastRequirementsSourceETL
 from etl.facts.inmobilized_hist_fact import ImmobilizedHistFactETL
+from etl.facts.last_sales_price_fact import LastSalesPriceFactETL
 from etl.facts.material_real_price_fact import MaterialRealPriceFactETL
 from etl.facts.monitor_stock_fact import MonitorStockFactETL
 from etl.facts.planned_orders_qty_fact import PlannedOrdersQtyFactETL
@@ -33,7 +37,6 @@ from etl.facts.production_data_fact import ProductionDataFactETL
 from etl.facts.production_orders_state_change_fact import (
     ProductonOrdersStateChangeFactETL,
 )
-from etl.facts.last_sales_price_fact import LastSalesPriceFactETL
 from etl.facts.purch_average_price_fact import PurchAvgPriceFactETL
 from etl.facts.purch_delivery_date_fact import PurchDeliveryDateFactETL
 from etl.facts.purchase_movements_fact import PurchaseMovementsFactETL
@@ -50,15 +53,13 @@ from etl.facts.sales_open_orders_fact import SalesOpenOrdersFactETL
 from etl.facts.sales_order_hist_fact import SalesOrderHistFactETL
 from etl.facts.sample_delivery_fact import SampleDeliveryFactETL
 from etl.facts.sustainability_data_fact import SustainabilityDataFactETL
+from etl.facts.vendor_assesment_fact import VendorAssesmentFactETL
+from etl.facts.fi_monthly_expenses import FinanceExpensesFactETL
 from utils.config import Config
 from utils.dimension_lookup import DimensionLookup
 from utils.job_runner import safe_run_job
 from utils.logger import Logger
-from etl.facts.vendor_assesment_fact import VendorAssesmentFactETL
-from etl.facts.customer_dm_fact import CustomerDMFactETL
-from etl.facts.fi_open_items import FinanceOpenItemsFactETL
 from utils.result_sender import ResultSender
-from etl.facts.forecast_requirements_source import ForecastRequirementsSourceETL
 
 
 @dataclass(frozen=True)
@@ -208,6 +209,9 @@ def _build_job_factories(context: RuntimeContext) -> dict[str, Callable[[], None
         ).run,
         "result_sender": ResultSender(context.con_dw).send_result,
         "forecast_requirements_source_fact": ForecastRequirementsSourceETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "fi_monthly_expenses_fact": FinanceExpensesFactETL(
             context.con_dw, context.con_sap, context.lookup
         ).run,
     }

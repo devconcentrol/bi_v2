@@ -1,9 +1,9 @@
-from utils.logger import Logger
 import pandas as pd
-
 from sqlalchemy import (
     Engine,
 )
+
+from utils.logger import Logger
 
 
 class DimensionLookup:

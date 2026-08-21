@@ -1,20 +1,22 @@
-import pandas as pd
 from datetime import date, timedelta
 from zoneinfo import ZoneInfo
-from utils.error_handler import error_handler
-from utils.logger import Logger
+
+import pandas as pd
 from sqlalchemy import (
-    MetaData,
-    Table,
     Column,
+    Date,
+    Integer,
+    MetaData,
     String,
+    Table,
+    Time,
     insert,
     text,
-    Integer,
-    Date,
-    Time,
 )
+
 from etl.base_fact_etl import BaseFactETL
+from utils.error_handler import error_handler
+from utils.logger import Logger
 
 
 class EWMTasksFactETL(BaseFactETL):

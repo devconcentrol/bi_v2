@@ -4,9 +4,8 @@ import unittest
 from contextlib import redirect_stdout
 from unittest.mock import MagicMock, patch
 
-from utils.config import Config
-
 import main_test
+from utils.config import Config
 
 
 class MainTestCliTests(unittest.TestCase):

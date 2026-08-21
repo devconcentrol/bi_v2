@@ -1,4 +1,5 @@
 from sqlalchemy import text
+
 from utils.config import Config
 
 

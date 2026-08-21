@@ -1,20 +1,21 @@
 import pandas as pd
-from utils.error_handler import error_handler
-from utils.logger import Logger
-from etl.base_fact_etl import BaseFactETL
 from sqlalchemy import (
-    MetaData,
-    Table,
-    Column,
-    Integer,
-    String,
-    REAL,
     DECIMAL,
+    REAL,
+    Column,
     Date,
+    Insert,
+    Integer,
+    MetaData,
+    String,
+    Table,
     insert,
     text,
-    Insert,
 )
+
+from etl.base_fact_etl import BaseFactETL
+from utils.error_handler import error_handler
+from utils.logger import Logger
 
 
 class SalesOpenOrdersFactETL(BaseFactETL):

@@ -1,21 +1,22 @@
 from datetime import date, timedelta
-import pandas as pd
 
+import pandas as pd
 from sqlalchemy import (
-    MetaData,
-    Table,
-    Column,
-    Integer,
-    String,
-    insert,
-    Insert,
-    REAL,
-    Date,
     DECIMAL,
+    REAL,
+    Column,
+    Date,
+    Insert,
+    Integer,
+    MetaData,
+    String,
+    Table,
+    insert,
 )
+
+from etl.base_fact_etl import BaseFactETL
 from utils.error_handler import error_handler
 from utils.logger import Logger
-from etl.base_fact_etl import BaseFactETL
 
 
 class SalesFactETL(BaseFactETL):

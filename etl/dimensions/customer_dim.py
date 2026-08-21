@@ -1,24 +1,26 @@
-import pandas as pd
-from utils.error_handler import error_handler
-from utils.dimension_lookup import DimensionLookup
-from utils.config import Config
-from utils.logger import Logger
 from datetime import date, timedelta
+
+import pandas as pd
 from sqlalchemy import (
-    bindparam,
-    MetaData,
-    Table,
     Column,
-    Integer,
-    String,
-    update,
+    Date,
     Engine,
+    Insert,
+    Integer,
+    MetaData,
+    String,
+    Table,
+    Update,
+    bindparam,
     insert,
     text,
-    Insert,
-    Update,
-    Date,
+    update,
 )
+
+from utils.config import Config
+from utils.dimension_lookup import DimensionLookup
+from utils.error_handler import error_handler
+from utils.logger import Logger
 
 CRLF: str = "\r\n"
 

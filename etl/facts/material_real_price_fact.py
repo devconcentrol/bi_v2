@@ -1,19 +1,20 @@
 import pandas as pd
+from sqlalchemy import (
+    DECIMAL,
+    Column,
+    Date,
+    Insert,
+    Integer,
+    MetaData,
+    String,
+    Table,
+    insert,
+    text,
+)
+
+from etl.base_fact_etl import BaseFactETL
 from utils.error_handler import error_handler
 from utils.logger import Logger
-from sqlalchemy import (
-    MetaData,
-    Table,
-    Column,
-    String,
-    DECIMAL,
-    Insert,
-    text,
-    Integer,
-    Date,
-    insert,
-)
-from etl.base_fact_etl import BaseFactETL
 
 
 class MaterialRealPriceFactETL(BaseFactETL):

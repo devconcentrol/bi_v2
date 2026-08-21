@@ -10,9 +10,9 @@ from sqlalchemy import (
     text,
 )
 
+from etl.base_fact_etl import BaseFactETL
 from utils.error_handler import error_handler
 from utils.logger import Logger
-from etl.base_fact_etl import BaseFactETL
 
 
 class PurchAvgPriceFactETL(BaseFactETL):

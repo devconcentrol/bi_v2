@@ -1,24 +1,27 @@
 ## Solo se usa para el debe haber del BI de bi_ordenes.
-import pandas as pd
 from datetime import date
-from utils.error_handler import error_handler
-from utils.dimension_lookup import DimensionLookup
-from utils.logger import Logger
-from utils.config import Config
-from etl.base_fact_etl import BaseFactETL
+
+import pandas as pd
 from sqlalchemy import (
-    MetaData,
-    Table,
-    Column,
-    Integer,
-    String,
     DECIMAL,
+    Column,
     Date,
+    Engine,
+    Insert,
+    Integer,
+    MetaData,
+    String,
+    Table,
     insert,
     text,
-    Insert,
-    Engine
 )
+
+from etl.base_fact_etl import BaseFactETL
+from utils.config import Config
+from utils.dimension_lookup import DimensionLookup
+from utils.error_handler import error_handler
+from utils.logger import Logger
+
 
 class PlannedOrdersQtyFactETL(BaseFactETL):
     COLUMN_MAPPING = {

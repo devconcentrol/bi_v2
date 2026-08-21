@@ -1,16 +1,17 @@
 import pandas as pd
 from sqlalchemy import (
+    Column,
+    Insert,
+    Integer,
     MetaData,
     Table,
-    Column,
-    Integer,
     insert,
     text,
-    Insert,
 )
+
+from etl.base_fact_etl import BaseFactETL
 from utils.error_handler import error_handler
 from utils.logger import Logger
-from etl.base_fact_etl import BaseFactETL
 
 
 class CustomerDMFactETL(BaseFactETL):

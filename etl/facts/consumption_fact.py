@@ -1,18 +1,19 @@
 import pandas as pd
-from utils.error_handler import error_handler
-from utils.logger import Logger
-from etl.base_fact_etl import BaseFactETL
 from sqlalchemy import (
-    MetaData,
-    Table,
+    DECIMAL,
     Column,
+    Date,
+    Insert,
+    MetaData,
     String,
+    Table,
     insert,
     text,
-    Insert,
-    DECIMAL,
-    Date,
 )
+
+from etl.base_fact_etl import BaseFactETL
+from utils.error_handler import error_handler
+from utils.logger import Logger
 
 
 class ConsumptionFactETL(BaseFactETL):

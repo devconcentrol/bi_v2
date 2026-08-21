@@ -1,21 +1,22 @@
 import pandas as pd
-from utils.error_handler import error_handler
-from utils.dimension_lookup import DimensionLookup
-from utils.logger import Logger
-from utils.config import Config
-from etl.base_fact_etl import BaseFactETL
 from sqlalchemy import (
-    MetaData,
-    Table,
-    Column,
-    Integer,
-    String,
-    Engine,
     DECIMAL,
+    Column,
+    Engine,
+    Insert,
+    Integer,
+    MetaData,
+    String,
+    Table,
     insert,
     text,
-    Insert,
 )
+
+from etl.base_fact_etl import BaseFactETL
+from utils.config import Config
+from utils.dimension_lookup import DimensionLookup
+from utils.error_handler import error_handler
+from utils.logger import Logger
 
 
 class MonitorStockFactETL(BaseFactETL):

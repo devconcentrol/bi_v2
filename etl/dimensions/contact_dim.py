@@ -1,21 +1,23 @@
-import pandas as pd
 from datetime import date
-from utils.error_handler import error_handler
-from utils.dimension_lookup import DimensionLookup
-from utils.config import Config
-from utils.logger import Logger
+
+import pandas as pd
 from sqlalchemy import (
-    MetaData,
-    Table,
     Column,
-    Integer,
-    String,
+    Date,
     Engine,
+    Insert,
+    Integer,
+    MetaData,
+    String,
+    Table,
     insert,
     text,
-    Insert,
-    Date,
 )
+
+from utils.config import Config
+from utils.dimension_lookup import DimensionLookup
+from utils.error_handler import error_handler
+from utils.logger import Logger
 
 
 class ContactDim:

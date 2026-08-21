@@ -1,4 +1,5 @@
 import os
+
 from dotenv import load_dotenv
 
 
@@ -81,6 +82,9 @@ class Config:
         self.TABLE_NOTIFICATION_DEFECT_DIM = "NotificationDefectDim"
         self.TABLE_FI_OPEN_ITEMS_FACT = "FinanceOpenItemsFact"
         self.TABLE_FORECAST_REQUIREMENTS_SOURCE_FACT = "ForecastRequirementsSourceFact"
+        self.TABLE_FI_EXPENSES_ACCOUNT_BALANCE_FACT = (
+            "FinanceExpenseAccountBalancesFact"
+        )
 
         # Standard Constants
         self.DEFAULT_SALES_ORG = "1000"

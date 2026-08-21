@@ -1,5 +1,6 @@
-from utils.logger import Logger
 from functools import wraps
+
+from utils.logger import Logger
 
 
 def error_handler(func):

@@ -1,15 +1,17 @@
-import pandas as pd
 from datetime import datetime
+
+import pandas as pd
 from sqlalchemy import (
-    MetaData,
-    Table,
-    Column,
-    String,
     DECIMAL,
+    Column,
     Date,
+    MetaData,
+    String,
+    Table,
     insert,
     text,
 )
+
 from etl.base_fact_etl import BaseFactETL
 from utils.error_handler import error_handler
 from utils.logger import Logger
@@ -84,14 +86,14 @@ class ForecastConsumptionsFactETL(BaseFactETL):
 
         # 2. Extract Data from SAP
         sql_get_forecast = """
-            SELECT WERKS,                                                                                                                                            
+            SELECT WERKS,
                    MATNR,                                   
                    MEINS,
                    BDTER,
                    BDMNG
             FROM SAPSR3.ZCON_V_CONSUMPTION_FORECAST       
             WHERE PLSCN = '001' 	          
-	          AND MTART IN ('ROH','LEER','ENV')                                  
+              AND MTART IN ('ROH','LEER','ENV')                                  
         """
 
         results: pd.DataFrame = pd.read_sql(
@@ -102,7 +104,8 @@ class ForecastConsumptionsFactETL(BaseFactETL):
 
         # 3. Handle Deletion in Data Warehouse
         stmt_delete = text(
-            f"DELETE FROM {self._config.TABLE_CONSUMPTION_FORECAST_FACT} WHERE ForecastDate >= :cutoff_dw"
+            f"DELETE FROM {self._config.TABLE_CONSUMPTION_FORECAST_FACT} "
+            "WHERE ForecastDate >= :cutoff_dw"
         )
 
         if results.empty:
