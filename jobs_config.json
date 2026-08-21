@@ -48,7 +48,9 @@
       "name": "invalidate_dimension_caches",
       "enabled": true,
       "times": [
-        "01:25"
+        "01:25",
+        "10:55",
+        "14:55"
       ],
       "frequency": "daily"
     },

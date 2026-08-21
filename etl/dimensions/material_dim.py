@@ -1,26 +1,28 @@
-import pandas as pd
 from datetime import date, timedelta
-from utils.error_handler import error_handler
-from utils.dimension_lookup import DimensionLookup
-from utils.config import Config
-from utils.logger import Logger
+
+import pandas as pd
 from sqlalchemy import (
-    bindparam,
-    MetaData,
-    Table,
+    DECIMAL,
     Column,
-    Integer,
-    String,
-    update,
+    Date,
     Engine,
+    Float,
+    Insert,
+    Integer,
+    MetaData,
+    String,
+    Table,
+    Update,
+    bindparam,
     insert,
     text,
-    Insert,
-    Update,
-    DECIMAL,
-    Date,
-    Float,
+    update,
 )
+
+from utils.config import Config
+from utils.dimension_lookup import DimensionLookup
+from utils.error_handler import error_handler
+from utils.logger import Logger
 
 
 class MaterialDim:
@@ -58,14 +60,19 @@ class MaterialDim:
         yesterday = (date.today() - timedelta(days=1)).strftime("%Y%m%d")
 
         stmt_update_etl = text(
-            f"""UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() WHERE ETL = 'process_materials'"""
+            f"""
+            UPDATE {self._config.TABLE_ETL_INFO}
+            SET ProcessDate = GETDATE()
+            WHERE ETL = 'process_materials'
+            """
         )
 
         # Load Source Data
         sql_get_materials = """
-                            SELECT MATNR, MAKTX, MTART, EISBE, MINBE, MABST, EKGRP, PRDHA, LVORM, NETWEIGHT ,
+                            SELECT MATNR, MAKTX, MTART, EISBE, MINBE, MABST,
+                                   EKGRP, PRDHA, LVORM, NETWEIGHT,
                                    ERSDA, PLIFZ, MSTAE, MHDHB
-                            FROM SAPSR3.ZCON_V_MATERIAL                              
+                            FROM SAPSR3.ZCON_V_MATERIAL
                             WHERE LAEDA >= :yesterday
                         """
         results: pd.DataFrame = pd.read_sql(

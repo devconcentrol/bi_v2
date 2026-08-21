@@ -1,0 +1,49 @@
+[project]
+name = "bi-v2"
+version = "0.1.0"
+description = "ETL jobs for BI"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "et-xmlfile==2.0.0",
+    "greenlet==3.3.0",
+    "hdbcli==2.27.19",
+    "numpy==2.4.0",
+    "openpyxl==3.1.5",
+    "pandas==2.3.3",
+    "pymssql==2.3.11",
+    "python-dateutil==2.9.0.post0",
+    "python-dotenv==1.2.1",
+    "pytz==2025.2",
+    "schedule==1.2.2",
+    "six==1.17.0",
+    "sqlalchemy==2.0.45",
+    "sqlalchemy-hana==4.2.0",
+    "typing-extensions==4.15.0",
+    "tzdata==2025.3",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.12.11",
+]
+
+[project.scripts]
+bi-etl = "main:main"
+bi-etl-cli = "main_test:main"
+
+[build-system]
+requires = ["setuptools>=80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["job_registry", "main", "main_test"]
+
+[tool.setuptools.packages.find]
+include = ["etl*", "utils*"]
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
