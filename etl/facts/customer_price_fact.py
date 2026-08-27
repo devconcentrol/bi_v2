@@ -58,9 +58,11 @@ class CustomerPriceFactETL(BaseFactETL):
                                PRECIO_MED,
                                PRECIO_MIN,
                                COST_PRICE
-                        FROM SAPSR3.ZCON_V_CUSTOMER_PRICES                                                                                    
+                        FROM SAPSR3.ZCON_V_CUSTOMER_PRICES
                         """
-        results: pd.DataFrame = pd.read_sql(sql_get_customer_prices, con=self._con_sap, dtype_backend="numpy_nullable")
+        results: pd.DataFrame = pd.read_sql(
+            sql_get_customer_prices, con=self._con_sap, dtype_backend="numpy_nullable"
+        )
 
         if results.empty:
             Logger().info("No customer price data found.")
@@ -149,7 +151,9 @@ class CustomerPriceFactETL(BaseFactETL):
         # Select only required columns
         final_cols = list(self.COLUMN_MAPPING.values())
         insert_records = (
-            results[final_cols].where(pd.notnull(results), None).to_dict(orient="records")
+            results[final_cols]
+            .where(pd.notnull(results), None)
+            .to_dict(orient="records")
         )
 
         # Database Operations
@@ -159,7 +163,9 @@ class CustomerPriceFactETL(BaseFactETL):
         with self._con_dw.begin() as conn:
             conn.execute(stmt_truncate)
             if insert_records:
-                Logger().info(f"Inserting {len(insert_records)} customer price records.")
+                Logger().info(
+                    f"Inserting {len(insert_records)} customer price records."
+                )
                 conn.execute(stmt_insert, insert_records)
 
             self._update_etl_info(conn, "process_customer_prices")

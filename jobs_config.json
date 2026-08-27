@@ -48,7 +48,7 @@
       "name": "invalidate_dimension_caches",
       "enabled": true,
       "times": [
-        "01:25",
+        "00:55",
         "10:55",
         "14:55"
       ],
