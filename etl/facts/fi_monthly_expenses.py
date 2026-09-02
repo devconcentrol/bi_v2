@@ -4,7 +4,6 @@ import pandas as pd
 from sqlalchemy import (
     DECIMAL,
     Column,
-    Date,
     Integer,
     MetaData,
     String,
@@ -46,6 +45,7 @@ class FinanceExpensesFactETL(BaseFactETL):
             FROM SAPSR3.ZCON_V_FI_GASTOS       
             WHERE RBUKRS = '1000' 	          
               AND GJAHR = :fiscal_year
+              AND POPER <= 12
         """
 
         results: pd.DataFrame = pd.read_sql(

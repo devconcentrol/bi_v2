@@ -36,7 +36,7 @@ class ForecastConsumptionsFactETL(BaseFactETL):
     }
 
     # IMPORTANTE MODIFICAR ESTO SEGÚN EL PRIMER MES DE LA PREVISIÓN QUE SE ESTÉ CARGANDO.
-    MES = 8  # Primer mes de la previsión (1-12)
+    MES = 9  # Primer mes de la previsión (1-12)
 
     @staticmethod
     def _calculate_cutoff_date(month: int) -> datetime:
