@@ -65,11 +65,18 @@ class ForecastConsumptionsFactETL(BaseFactETL):
 
         results["ForecastDate"] = pd.to_datetime(
             results["bdter"].astype(str), format="%Y%m%d", errors="coerce"
-        ).dt.date
+        )
+
+        next_month_mask = results["ForecastDate"].dt.day > 20
+        results.loc[next_month_mask, "ForecastDate"] = results.loc[
+            next_month_mask, "ForecastDate"
+        ] + pd.DateOffset(months=1)
+        results["ForecastDate"] = results["ForecastDate"].dt.date
 
         results.loc[results["ForecastDate"] < cutoff_date.date(), "ForecastDate"] = (
             cutoff_date.date()
         )
+
         results["bdmng"] = pd.to_numeric(results["bdmng"], errors="coerce").fillna(0)
         results = results.rename(columns=self.COLUMN_MAPPING)
 
