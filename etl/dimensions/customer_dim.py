@@ -50,6 +50,7 @@ class CustomerDim:
         "CustDivisionId": "CustDivisionId",  # Mapped column
         "ModifiedDate": "chdat",
         "PriceGroup": "konda",
+        "DeliveryPriority": "lprio",  # Mapped column
         # "CustId" is handled separately as it determines insert vs update
     }
 
@@ -69,8 +70,9 @@ class CustomerDim:
         )
 
         sql_get_customers = """
-                            SELECT KUNNR, NAME, VKORG, VTWEG, SPART, LAND1, BZIRK, KDGRP, ZR, ZE, CRDAT, REGIO, HKUNNR, 
-                                   KTOKD, TAXNUM, PSTLZ, ORT01, KVGR2, ADDRESS, CHDAT, KONDA
+                            SELECT KUNNR, NAME, VKORG, VTWEG, SPART, LAND1, BZIRK, KDGRP, 
+                                   ZR, ZE, CRDAT, REGIO, HKUNNR, KTOKD, TAXNUM, PSTLZ, 
+                                   ORT01, KVGR2, ADDRESS, CHDAT, KONDA, LPRIO
                             FROM SAPSR3.ZCON_V_CUSTOMER                            
                             WHERE CHDAT >= :yesterday                            
                         """
@@ -119,6 +121,7 @@ class CustomerDim:
             Column("ModifiedDate", Date),
             Column("CustDivisionId", Integer, nullable=True),
             Column("PriceGroup", String(10), nullable=True),
+            Column("DeliveryPriority", String(10), nullable=True),
         )
 
         # Prepare maps

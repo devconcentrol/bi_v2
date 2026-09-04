@@ -51,10 +51,10 @@ class EWMLocationsFactETL(BaseFactETL):
                    LGTYP,
                    KZLER, --Vacía
                    KZVOL, --Completa
-	               BTANR, --Última tarea
-	               SKZUA, --Bloqueado salida de stock
-	               SKZUE, --Bloqueado entrada de stock
-	               MOVED_AT, --Datetime confirmación con UTC aplicada,                   
+                   BTANR, --Última tarea
+                   SKZUA, --Bloqueado salida de stock
+                   SKZUE, --Bloqueado entrada de stock
+                   MOVED_AT, --Datetime confirmación con UTC aplicada,                   
                    MATNR,
                    CHARG,
                    QUAN,

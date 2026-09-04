@@ -39,6 +39,7 @@ class SalesOpenOrdersFactETL(BaseFactETL):
         "ztar": "ZtarAmount",
         "ztra": "ZtraAmount",
         "currency_conversion_rate": "ConRate",
+        "lprio": "DeliveryPriority",
     }
 
     @error_handler
@@ -69,11 +70,14 @@ class SalesOpenOrdersFactETL(BaseFactETL):
                                AUART,
                                ZTAR,
                                ZTRA,
-                               CURRENCY_CONVERSION_RATE
-                        FROM SAPSR3.ZCON_V_OPEN_SALES_ORDERS                                                    
+                               CURRENCY_CONVERSION_RATE,
+                               LPRIO
+                        FROM SAPSR3.ZCON_V_OPEN_SALES_ORDERS
                         WHERE VKORG = 1000                        
                         """
-        results: pd.DataFrame = pd.read_sql(sql_get_open_orders, con=self._con_sap)
+        results: pd.DataFrame = pd.read_sql(
+            sql_get_open_orders, con=self._con_sap, dtype_backend="numpy_nullable"
+        )
 
         if results.empty:
             Logger().info("No open orders data found in SAP.")
@@ -101,9 +105,11 @@ class SalesOpenOrdersFactETL(BaseFactETL):
         for col in date_cols:
             if col in results.columns:
                 # SAP dates are YYYYMMDD. "00000000" or invalid becomes NaT.
-                results[col] = pd.to_datetime(
-                    results[col], format="%Y%m%d", errors="coerce"
-                ).dt.date.replace({pd.NaT: None})
+                results[col] = (
+                    pd.to_datetime(results[col], format="%Y%m%d", errors="coerce")
+                    .convert_dtypes()
+                    .dt.date
+                )
 
         # Prepare Keys for Lookups
         # Ensure string types for key components
@@ -175,12 +181,15 @@ class SalesOpenOrdersFactETL(BaseFactETL):
             Column("ZtarAmount", DECIMAL(15, 4)),
             Column("ZtraAmount", DECIMAL(15, 4)),
             Column("ConRate", DECIMAL(15, 4)),
+            Column("DeliveryPriority", String(5)),
         )
 
         # 6. Database Operations (Backup -> Truncate -> Insert)
         table_fields: str = ",".join(self.COLUMN_MAPPING.values())
         stmt_backup = text(
-            f"INSERT INTO {self._config.TABLE_SALES_OPEN_ORDERS_FACT_HIST} ({table_fields}) SELECT {table_fields} FROM {self._config.TABLE_SALES_OPEN_ORDERS_FACT}"
+            f"INSERT INTO {self._config.TABLE_SALES_OPEN_ORDERS_FACT_HIST} "
+            f"({table_fields}) SELECT {table_fields} "
+            f"FROM {self._config.TABLE_SALES_OPEN_ORDERS_FACT}"
         )
         stmt_truncate = text(
             f"TRUNCATE TABLE {self._config.TABLE_SALES_OPEN_ORDERS_FACT}"
