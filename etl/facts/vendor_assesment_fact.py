@@ -53,8 +53,8 @@ class VendorAssesmentFactETL(BaseFactETL):
                                CASE 
                                  WHEN DOKAR = 'Z02' THEN 5
                                  WHEN DOKAR = 'Z05' THEN 10
-                               END AS ASSESMENT_VALUE                                                               
-                        FROM SAPSR3.ZCON_V_AV_PROV_ISO                           
+                               END AS ASSESMENT_VALUE
+                        FROM IsoDocumentTmp                          
                         """
         sql_get_inc = """
                         SELECT LIFNR,
@@ -64,7 +64,8 @@ class VendorAssesmentFactETL(BaseFactETL):
                         WHERE YEAR_AUSVN = :year_ausvn
         """
 
-        iso_results: pd.DataFrame = pd.read_sql(sql_get_iso, con=self._con_sap)
+        iso_results: pd.DataFrame = pd.read_sql(sql_get_iso, con=self._con_dw)
+        iso_results.columns = iso_results.columns.str.lower()
         inc_results: pd.DataFrame = pd.read_sql(
             sql_get_inc, con=self._con_sap, params={"year_ausvn": year_ausvn}
         )
