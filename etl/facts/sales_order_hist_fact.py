@@ -31,6 +31,7 @@ class SalesOrderHistFactETL(BaseFactETL):
         "qty": "QtyOrdered",
         "conf_qty": "QtyConfirmed",
         "meins": "UnitId",
+        "lprio": "DeliveryPriority",
     }
 
     @error_handler
@@ -55,7 +56,8 @@ class SalesOrderHistFactETL(BaseFactETL):
                    MEINS,
                    VKORG,
                    VTWEG,
-                   SPART
+                   SPART,
+                   LPRIO
             FROM SAPSR3.ZCON_V_SALES_ORDER_DELAY                                                   
             WHERE VKORG = 1000                             
               AND AEDAT = :yesterday
@@ -149,6 +151,7 @@ class SalesOrderHistFactETL(BaseFactETL):
             Column("QtyOrdered", REAL),
             Column("QtyConfirmed", REAL),
             Column("UnitId", String(10)),
+            Column("DeliveryPriority", String(5)),
         )
 
         # Merge with existing orders to find which ones to delete

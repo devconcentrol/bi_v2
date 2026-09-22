@@ -391,7 +391,9 @@
       "name": "new_sale_checker",
       "enabled": true,
       "times": [
-        "04:00"
+        "08:00",
+        "11:00",
+        "15:00"
       ],
       "frequency": "daily"
     }
