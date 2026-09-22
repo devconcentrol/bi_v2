@@ -386,6 +386,14 @@
         "04:00"
       ],
       "frequency": "weekly"
+    },
+    {
+      "name": "new_sale_checker",
+      "enabled": true,
+      "times": [
+        "04:00"
+      ],
+      "frequency": "daily"
     }
   ]
 }

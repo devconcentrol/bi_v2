@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Callable
 
 from sqlalchemy import Engine
 
@@ -25,6 +25,7 @@ from etl.facts.ewm_locations_fact import EWMLocationsFactETL
 from etl.facts.ewm_task_fact import EWMTasksFactETL
 from etl.facts.extended_batch_stock_fact import ExtendedBatchStockFactETL
 from etl.facts.extended_stock_fact import ExtendedStockFactETL
+from etl.facts.fi_monthly_expenses import FinanceExpensesFactETL
 from etl.facts.fi_open_items import FinanceOpenItemsFactETL
 from etl.facts.forecast_consumptions_fact import ForecastConsumptionsFactETL
 from etl.facts.forecast_requirements_source import ForecastRequirementsSourceETL
@@ -54,12 +55,13 @@ from etl.facts.sales_order_hist_fact import SalesOrderHistFactETL
 from etl.facts.sample_delivery_fact import SampleDeliveryFactETL
 from etl.facts.sustainability_data_fact import SustainabilityDataFactETL
 from etl.facts.vendor_assesment_fact import VendorAssesmentFactETL
-from etl.facts.fi_monthly_expenses import FinanceExpensesFactETL
 from utils.config import Config
 from utils.dimension_lookup import DimensionLookup
 from utils.job_runner import safe_run_job
 from utils.logger import Logger
-from utils.result_sender import ResultSender
+from utils.message_sender import EmailSender, WhatsAppSender
+from utils.new_sale_checker import NewSaleChecker
+from utils.result_sender import ProcessExecutionNotifier
 
 
 @dataclass(frozen=True)
@@ -86,6 +88,19 @@ class JobConfigEntry:
 
 
 def _build_job_factories(context: RuntimeContext) -> dict[str, Callable[[], None]]:
+    config = Config.get_instance()
+    whatsapp_sender = WhatsAppSender(
+        api_url=config.API_URL,
+        api_key=config.API_KEY,
+    )
+    email_sender = EmailSender(
+        smtp_host=config.SMTP_HOST,
+        sender=config.EMAIL_SENDER,
+        recipients=config.EMAIL_RECIPIENTS,
+        subject="New Sales Orders Outside Forecast",
+        username=config.SMTP_USERNAME,
+        password=config.SMTP_PASSWORD,
+    )
     return {
         "agents_dim": AgentDim(context.con_dw, context.con_sap, context.lookup).run,
         "customer_dim": CustomerDim(
@@ -207,12 +222,17 @@ def _build_job_factories(context: RuntimeContext) -> dict[str, Callable[[], None
         "fi_open_items_fact": FinanceOpenItemsFactETL(
             context.con_dw, context.con_sap, context.lookup
         ).run,
-        "result_sender": ResultSender(context.con_dw).send_result,
+        "result_sender": ProcessExecutionNotifier(
+            context.con_dw, whatsapp_sender
+        ).send_result,
         "forecast_requirements_source_fact": ForecastRequirementsSourceETL(
             context.con_dw, context.con_sap, context.lookup
         ).run,
         "fi_monthly_expenses_fact": FinanceExpensesFactETL(
             context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "new_sale_checker": NewSaleChecker(
+            context.con_dw, context.con_sap, context.lookup, email_sender
         ).run,
     }
 

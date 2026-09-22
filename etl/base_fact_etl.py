@@ -13,10 +13,11 @@ class BaseFactETL:
     def run(self):
         raise NotImplementedError
 
-    def _update_etl_info(self, conn=None, etl_name: str = None):
+    def _update_etl_info(self, conn=None, etl_name: str | None = None):
         if conn:
             stmt = text(
-                f"UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() WHERE ETL = :etl_name"
+                f"UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() "
+                "WHERE ETL = :etl_name"
             )
             conn.execute(stmt, {"etl_name": etl_name})
         else:

@@ -27,6 +27,13 @@ class Config:
         self.API_KEY = os.getenv("API_KEY")
         self.API_URL = os.getenv("API_URL")
 
+        # Email Configuration
+        self.SMTP_HOST = os.getenv("SMTP_HOST", "localhost")
+        self.EMAIL_SENDER = os.getenv("EMAIL_SENDER", "concentrol@concentrol.com")
+        self.EMAIL_RECIPIENTS = os.getenv("EMAIL_RECIPIENTS", "").split(",")
+        self.SMTP_USERNAME = os.getenv("SMTP_USERNAME", "concentrol@concentrol.com")
+        self.SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+
         # Validation
         if not self.HANA_CONNECTION:
             raise ValueError("HANA_CONNECTION not set in environment.")
@@ -85,6 +92,7 @@ class Config:
         self.TABLE_FI_EXPENSES_ACCOUNT_BALANCE_FACT = (
             "FinanceExpenseAccountBalancesFact"
         )
+        self.TABLE_SALES_FORECAST_FACT = "SalesForecastFact"
 
         # Standard Constants
         self.DEFAULT_SALES_ORG = "1000"
