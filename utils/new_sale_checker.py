@@ -90,11 +90,11 @@ class NewSaleChecker(BaseFactETL):
         orders.columns = orders.columns.str.lower()
         self._require_columns(
             orders,
-            {"kunnr", "matnr", "vkorg", "vtweg", "spart", "delivery_date"},
+            {"kunnr", "matnr", "vkorg", "vtweg", "spart", "goods_issue_date"},
             "ZCON_V_OPEN_SALES_ORDERS",
         )
-        orders["delivery_date"] = pd.to_datetime(
-            orders["delivery_date"], errors="coerce", format="%Y%m%d"
+        orders["goods_issue_date"] = pd.to_datetime(
+            orders["goods_issue_date"], errors="coerce", format="%Y%m%d"
         )
 
         for column in ("kunnr", "matnr", "vkorg", "vtweg", "spart"):
@@ -110,15 +110,15 @@ class NewSaleChecker(BaseFactETL):
         orders["CustId"] = customer_key.map(customer_map).fillna(
             fallback_key.map(customer_map)
         )
-        delivery_dates = pd.to_datetime(
-            orders["delivery_date"].astype(str),
+        goods_issue_dates = pd.to_datetime(
+            orders["goods_issue_date"].astype(str),
             format="%Y%m%d",
             errors="coerce",
         )
-        delivery_dates = delivery_dates.fillna(
-            pd.to_datetime(orders["delivery_date"], errors="coerce")
+        goods_issue_dates = goods_issue_dates.fillna(
+            pd.to_datetime(orders["goods_issue_date"], errors="coerce")
         )
-        orders["ForecastPeriod"] = delivery_dates.dt.to_period("M")
+        orders["ForecastPeriod"] = goods_issue_dates.dt.to_period("M")
         return orders
 
     def _find_orders_without_forecast(
@@ -158,7 +158,8 @@ class NewSaleChecker(BaseFactETL):
                 "posnr",
                 "kunnr",
                 "matnr",
-                "delivery_date",
+                "maktx",
+                "goods_issue_date",
                 "qty",
             )
             if column in orders.columns
