@@ -48,14 +48,13 @@ class NewSaleChecker(BaseFactETL):
 
     def _get_new_orders(self, last_execution: datetime) -> pd.DataFrame:
         # ERDAT and ERZET are SAP date/time values in YYYYMMDD and HHMMSS format.
-        query = text(
-            """
+        query = text("""
             SELECT *
             FROM SAPSR3.ZCON_V_OPEN_SALES_ORDERS
-            WHERE ERDAT > :process_date
-               OR (ERDAT = :process_date AND ERZET > :process_time)
-            """
-        )
+            WHERE VKORG = '1000'
+               AND (ERDAT > :process_date
+               OR (ERDAT = :process_date AND ERZET > :process_time))
+            """)
         return pd.read_sql(
             query,
             self._con_sap,
