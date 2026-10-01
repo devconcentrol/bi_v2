@@ -59,19 +59,17 @@ class MaterialDim:
         Logger().info("Starting materials processing")
         yesterday = (date.today() - timedelta(days=1)).strftime("%Y%m%d")
 
-        stmt_update_etl = text(
-            f"""
+        stmt_update_etl = text(f"""
             UPDATE {self._config.TABLE_ETL_INFO}
             SET ProcessDate = GETDATE()
             WHERE ETL = 'process_materials'
-            """
-        )
+            """)
 
         # Load Source Data
         sql_get_materials = """
                             SELECT MATNR, MAKTX, MTART, EISBE, MINBE, MABST,
                                    EKGRP, PRDHA, LVORM, NETWEIGHT,
-                                   ERSDA, PLIFZ, MSTAE, MHDHB
+                                   ERSDA, PLIFZ, MSTAE, MHDHB, DENSITY
                             FROM SAPSR3.ZCON_V_MATERIAL
                             WHERE LAEDA >= :yesterday
                         """
@@ -119,6 +117,7 @@ class MaterialDim:
             Column("MaterialStatusId", Integer),
             Column("ShelfLife", Integer),
             Column("HalbMaterialId", Integer),
+            Column("Density", DECIMAL(15, 4)),
         )
 
         # Transformation & Vectorization
