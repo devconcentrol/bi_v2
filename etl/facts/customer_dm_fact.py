@@ -60,16 +60,34 @@ class CustomerDMFactETL(BaseFactETL):
             + self._config.DEFAULT_DIVISION
             + results["kunnr"]
         )
+        results["cust_key_fallback"] = (
+            self._config.DEFAULT_SALES_ORG
+            + self._config.INTERCOMPANY_CHANNEL
+            + self._config.DEFAULT_DIVISION
+            + results["kunnr"]
+        )
+        results["CustId_Fallback"] = results["cust_key_fallback"].map(customer_map)
         results["CustId"] = results["cust_key"].map(customer_map)
+        results["CustId"] = results["CustId"].fillna(results["CustId_Fallback"])
 
         results["kunnr_dm"] = results["kunnr_dm"].astype(str)
         results["cust_key2"] = (
+            self._config.DEFAULT_SALES_ORG
+            + self._config.DEFAULT_CHANNEL
+            + self._config.DEFAULT_DIVISION
+            + results["kunnr_dm"]
+        )
+
+        results["cust_key2_fallback"] = (
             self._config.DEFAULT_SALES_ORG
             + self._config.INTERCOMPANY_CHANNEL
             + self._config.DEFAULT_DIVISION
             + results["kunnr_dm"]
         )
+
+        results["CustId_DM_Fallback"] = results["cust_key2_fallback"].map(customer_map)
         results["CustDMId"] = results["cust_key2"].map(customer_map)
+        results["CustDMId"] = results["CustDMId"].fillna(results["CustId_DM_Fallback"])
 
         missing_cust_dm_ids = results[results["CustDMId"].isna()]
         if not missing_cust_dm_ids.empty:
