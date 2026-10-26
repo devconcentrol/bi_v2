@@ -386,7 +386,7 @@
       "times": [
         "04:00"
       ],
-      "frequency": "weekly"
+      "frequency": "daily"
     },
     {
       "name": "new_sale_checker",

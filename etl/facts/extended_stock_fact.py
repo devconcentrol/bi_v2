@@ -86,7 +86,7 @@ class ExtendedStockFactETL(BaseFactETL):
 
         # Lookup MaterialId
         material_map = self._lookup.get_material_map()
-        results["matnr"] = results["matnr"].astype(str)
+        results["matnr"] = results["matnr"].astype(str).str.replace("1000A", "MA")
         results["MaterialId"] = results["matnr"].map(material_map)
 
         # Filter out missing materials (was printed in loop before)

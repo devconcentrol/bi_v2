@@ -98,6 +98,7 @@ class Config:
         self.DEFAULT_SALES_ORG = "1000"
         self.DEFAULT_CHANNEL = "10"
         self.DEFAULT_DIVISION = "10"
+        self.INTERCOMPANY_CHANNEL = "90"
 
         # Economic Sales Type
         self.ECONOMIC_SALES_TYPE = "ZCRP"

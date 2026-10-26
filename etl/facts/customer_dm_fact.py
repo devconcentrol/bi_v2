@@ -65,7 +65,7 @@ class CustomerDMFactETL(BaseFactETL):
         results["kunnr_dm"] = results["kunnr_dm"].astype(str)
         results["cust_key2"] = (
             self._config.DEFAULT_SALES_ORG
-            + self._config.DEFAULT_CHANNEL
+            + self._config.INTERCOMPANY_CHANNEL
             + self._config.DEFAULT_DIVISION
             + results["kunnr_dm"]
         )

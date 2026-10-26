@@ -69,7 +69,16 @@ class FinanceOpenItemsFactETL(BaseFactETL):
             + results["kunnr"]
         )
 
+        key2 = (
+            results["bukrs"]
+            + self._config.INTERCOMPANY_CHANNEL
+            + self._config.DEFAULT_DIVISION
+            + results["kunnr"]
+        )
+
         results["CustId"] = key1.map(customer_map)
+        results["CustId_Fallback"] = key2.map(customer_map)
+        results["CustId"] = results["CustId"].fillna(results["CustId_Fallback"])
 
         # Rename and Select Columns
         results = results.rename(columns=self.COLUMN_MAPPING)

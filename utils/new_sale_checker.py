@@ -68,7 +68,8 @@ class NewSaleChecker(BaseFactETL):
     def _get_forecast(self) -> pd.DataFrame:
         query = text(
             f"SELECT CustId, MaterialId, ForecastDate FROM "
-            f"{self._config.TABLE_SALES_FORECAST_FACT}"
+            f"{self._config.TABLE_SALES_FORECAST_FACT} "
+            f"WHERE Quantity > 0"
         )
         return pd.read_sql(
             query,
