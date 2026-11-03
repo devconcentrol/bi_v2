@@ -24,6 +24,7 @@ class SalesOrderHistFactETL(BaseFactETL):
         "MaterialId": "MaterialId",
         "delivery_date": "DeliveryDate",
         "loading_date": "LoadingDate",
+        "planned_goods_issue_date": "PlannedGoodsIssueDate",
         "goods_issue_date": "GoodsIssueDate",
         "initial_delivery_date": "InitialDeliveryDate",
         "initial_loading_date": "InitialLoadingDate",
@@ -47,6 +48,7 @@ class SalesOrderHistFactETL(BaseFactETL):
                    MATNR,
                    DELIVERY_DATE,
                    LOADING_DATE,
+                   PLANNED_GOODS_ISSUE_DATE,
                    GOODS_ISSUE_DATE,
                    INITIAL_DELIVERY_DATE,
                    INITIAL_LOADING_DATE,
@@ -84,6 +86,7 @@ class SalesOrderHistFactETL(BaseFactETL):
         date_cols = [
             "delivery_date",
             "loading_date",
+            "planned_goods_issue_date",
             "goods_issue_date",
             "initial_delivery_date",
             "initial_loading_date",
@@ -123,8 +126,16 @@ class SalesOrderHistFactETL(BaseFactETL):
             + results["kunnr"]
         )
 
+        fallback_keys2 = (
+            results["vkorg"]
+            + config.INTERCOMPANY_CHANNEL
+            + results["spart"]
+            + results["kunnr"]
+        )
+
         results["CustId"] = direct_keys.map(customer_map)
         results["CustId"] = results["CustId"].fillna(fallback_keys.map(customer_map))
+        results["CustId"] = results["CustId"].fillna(fallback_keys2.map(customer_map))
 
         results["CustId"] = results["CustId"].astype("Int64")
         results["MaterialId"] = results["MaterialId"].astype("Int64")
@@ -148,6 +159,7 @@ class SalesOrderHistFactETL(BaseFactETL):
             Column("InitialDeliveryDate", Date),
             Column("InitialLoadingDate", Date),
             Column("InitialGoodsIssueDate", Date),
+            Column("PlannedGoodsIssueDate", Date),
             Column("QtyOrdered", REAL),
             Column("QtyConfirmed", REAL),
             Column("UnitId", String(10)),
