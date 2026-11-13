@@ -14,7 +14,7 @@
       "times": [
         "01:05",
         "11:00",
-        "15:00"
+        "16:00"
       ],
       "frequency": "daily"
     },
@@ -24,7 +24,7 @@
       "times": [
         "01:05",
         "11:00",
-        "15:00"
+        "16:00"
       ],
       "frequency": "daily"
     },
@@ -45,13 +45,21 @@
       "frequency": "daily"
     },
     {
+      "name": "work_center_dim",
+      "enabled": false,
+      "times": [
+        "01:25"
+      ],
+      "frequency": "daily"
+    },
+    {
       "name": "invalidate_dimension_caches",
       "enabled": true,
       "times": [
         "00:55",
         "01:30",
         "10:55",
-        "14:55"
+        "15:55"
       ],
       "frequency": "daily"
     },
@@ -336,7 +344,7 @@
       "times": [
         "01:06",
         "11:01",
-        "15:01"
+        "16:01"
       ],
       "frequency": "daily"
     },
@@ -349,7 +357,7 @@
       "frequency": "daily"
     },
     {
-      "name": "notification_defect_dim",
+      "name": "notification_catalog_dim",
       "enabled": true,
       "times": [
         "04:45"

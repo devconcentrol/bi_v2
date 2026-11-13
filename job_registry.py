@@ -12,8 +12,9 @@ from etl.dimensions.agent_dim import AgentDim
 from etl.dimensions.contact_dim import ContactDim
 from etl.dimensions.customer_dim import CustomerDim
 from etl.dimensions.material_dim import MaterialDim
-from etl.dimensions.notificactions_defect_dim import NotificationDefectDim
+from etl.dimensions.notificactions_catalog_dim import NotificationCatalogDim
 from etl.dimensions.vendor_dim import VendorDim
+from etl.dimensions.work_center_dim import WorkCenterDim
 from etl.facts.availability_calculation_fact import AvailabilityCalculationFactETL
 from etl.facts.consumption_ceco_fact import ConsumptionCeCoFactETL
 from etl.facts.consumption_fact import ConsumptionFactETL
@@ -111,6 +112,7 @@ def _build_job_factories(context: RuntimeContext) -> dict[str, Callable[[], None
         ).run,
         "vendor_dim": VendorDim(context.con_dw, context.con_sap, context.lookup).run,
         "contact_dim": ContactDim(context.con_dw, context.con_sap, context.lookup).run,
+        "work_center_dim": WorkCenterDim(context.con_dw, context.con_sap).run,
         "invalidate_dimension_caches": context.lookup.invalidate_caches,
         "costing_fact": CostingFactETL(context.con_dw, context.lookup).run,
         "document_flow_fact": DocumentFlowFactETL(
@@ -216,7 +218,7 @@ def _build_job_factories(context: RuntimeContext) -> dict[str, Callable[[], None
         "last_sales_price_fact": LastSalesPriceFactETL(
             context.con_dw, context.con_sap, context.lookup
         ).run,
-        "notification_defect_dim": NotificationDefectDim(
+        "notification_catalog_dim": NotificationCatalogDim(
             context.con_dw, context.con_sap, context.lookup
         ).run,
         "fi_open_items_fact": FinanceOpenItemsFactETL(

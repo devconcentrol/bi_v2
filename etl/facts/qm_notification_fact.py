@@ -26,11 +26,14 @@ class QMNotificationFactETL(BaseFactETL):
         "MaterialId": "MaterialId",
         "charg": "BatchNumber",
         "qmdat": "NotificationDate",
-        "qmcod": "Codification",
-        "qmgrp": "CodeGroup",
-        "qmart": "Type",
         "rkmng": "Qty",
         "DefectId": "DefectId",
+        "NotificationTypeId": "NotificationTypeId",
+        "CodificationId": "CodificationId",
+        "WorkCenterId": "WorkCenterId",
+        "dftxt": "DefectText",
+        "urtxt": "CauseText",
+        "CauseId": "CauseId",
     }
 
     def __init__(self, con_dw: Engine, con_sap: Engine, lookup: DimensionLookup):
@@ -53,11 +56,14 @@ class QMNotificationFactETL(BaseFactETL):
                   MATNR,
                   CHARG,
                   QMDAT,
-                  RKMNG                 
-            FROM SAPSR3.ZCON_V_NOTIFICATIONS 
-            WHERE (QMART = 'ZI' AND QMCOD = 'IN01')
-               OR (QMART = 'ZC' AND QMCOD = 'RC2')
-                                        
+                  RKMNG,
+                  ARBPL,
+                  URGRP,
+                  URCOD,
+                  DFTXT,
+                  URTXT                 
+            FROM SAPSR3.ZCON_V_NOTIFICATIONS
+            WHERE QMART IN ('ZI','ZM','ZO','ZS','ZC')
         """
 
         results: pd.DataFrame = pd.read_sql(sql_get_notifications, con=self._con_sap)
@@ -78,11 +84,38 @@ class QMNotificationFactETL(BaseFactETL):
         results["matnr"] = results["matnr"].astype(str)
         results["MaterialId"] = results["matnr"].map(material_map).convert_dtypes()
 
-        defect_map = self._lookup.get_notification_defect_map()
+        catalog_map = self._lookup.get_notification_catalog_map()
         results["fegrp"] = results["fegrp"].astype(str)
         results["fecod"] = results["fecod"].astype(str)
-        results["defect_key"] = results["fegrp"] + results["fecod"]
-        results["DefectId"] = results["defect_key"].map(defect_map).convert_dtypes()
+        results["defect_key"] = (
+            self._config.QM_DEFECT_CATALOG + results["fegrp"] + results["fecod"]
+        )
+        results["DefectId"] = results["defect_key"].map(catalog_map).convert_dtypes()
+
+        results["qmgrp"] = results["qmgrp"].astype(str)
+        results["qmcod"] = results["qmcod"].astype(str)
+        results["codification_key"] = (
+            self._config.QM_CODIFICATION_CATALOG + results["qmgrp"] + results["qmcod"]
+        )
+        results["CodificationId"] = (
+            results["codification_key"].map(catalog_map).convert_dtypes()
+        )
+
+        results["CauseId"] = (
+            (self._config.QM_CAUSE_CATALOG + results["urgrp"] + results["urcod"])
+            .map(catalog_map)
+            .convert_dtypes()
+        )
+
+        notification_type_map = self._lookup.get_notification_type_map()
+
+        results["NotificationTypeId"] = (
+            results["qmart"].astype(str).map(notification_type_map).convert_dtypes()
+        )
+
+        results["WorkCenterId"] = (
+            results["arbpl"].map(self._lookup.get_work_center_map()).convert_dtypes()
+        )
 
         results = results.rename(columns=self.COLUMN_MAPPING)
 
@@ -94,11 +127,15 @@ class QMNotificationFactETL(BaseFactETL):
             Column("MaterialId", Integer),
             Column("BatchNumber", String(50)),
             Column("NotificationDate", Date),
-            Column("CodeGroup", String(100)),
-            Column("Type", String(100)),
+            Column("NotificationTypeId", String(100)),
             Column("Codification", String(100)),
             Column("Qty", DECIMAL),
             Column("DefectId", Integer),
+            Column("CodificationId", Integer),
+            Column("WorkCenterId", Integer),
+            Column("DefectText", String),
+            Column("CauseText", String),
+            Column("CauseId", Integer),
         )
 
         final_cols = list(self.COLUMN_MAPPING.values())
@@ -123,6 +160,6 @@ class QMNotificationFactETL(BaseFactETL):
                 Logger().info(
                     f"Inserting {len(insert_records)} records into QM Notification Fact."
                 )
-                conn.execute(stmt_insert, insert_records)
+                conn.execute(stmt_insert, insert_records)  # type: ignore
 
             self._update_etl_info(conn, "process_qm_notification")

@@ -23,7 +23,7 @@ from utils.logger import Logger
 
 
 class AgentDim:
-    def __init__(self, con_dw: Engine, con_sap: Engine, lookup: DimensionLookup ):
+    def __init__(self, con_dw: Engine, con_sap: Engine, lookup: DimensionLookup):
         self._con_dw: Engine = con_dw
         self._con_sap: Engine = con_sap
         self._lookup: DimensionLookup = lookup
@@ -39,7 +39,8 @@ class AgentDim:
         Logger().info(f"Processing agents for date: {yesterday}")
 
         stmt_update_etl = text(
-            f"UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() WHERE ETL = 'process_agents'"
+            f"UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() "
+            "WHERE ETL = 'process_agents'"
         )
         sql_get_agents = f"""
                             SELECT BPTYPE,
@@ -49,7 +50,7 @@ class AgentDim:
                             FROM SAPSR3.ZCON_V_AGENTES
                             WHERE MODDATE = '{yesterday}'
                         """
-        
+
         results: pd.DataFrame = pd.read_sql(
             text(sql_get_agents), self._con_sap, params={"yesterday": yesterday}
         )
@@ -59,7 +60,7 @@ class AgentDim:
             with self._con_dw.begin() as conn:
                 conn.execute(stmt_update_etl)
             return
-        
+
         # normalize column names to lowercase to make downstream accesses predictable
         results.columns = results.columns.str.lower()
 
@@ -83,7 +84,7 @@ class AgentDim:
             .where(agent_table.c.AgentId == bindparam("b_AgentId"))
             .values(AgentName=bindparam("b_AgentName"))
         )
-        
+
         with self._con_dw.begin() as conn:
             agent_map = self._lookup.get_agent_map()
 
@@ -110,5 +111,5 @@ class AgentDim:
                     }
                 )[["AgentCode", "AgentType", "AgentName"]].to_dict(orient="records")
                 conn.execute(stmt_insert_agents, insert_data)  # type: ignore
-            
+
             conn.execute(stmt_update_etl)

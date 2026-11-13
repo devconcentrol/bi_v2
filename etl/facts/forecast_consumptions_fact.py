@@ -156,7 +156,8 @@ class ForecastConsumptionsFactETL(BaseFactETL):
 
         with self._con_dw.begin() as conn:
             Logger().info(
-                f"Deleting and inserting {len(insert_records)} forecast consumption records."
+                "Deleting and inserting %s forecast consumption records.",
+                len(insert_records),
             )
             conn.execute(stmt_delete, {"cutoff_dw": cutoff_dw})
             if insert_records:

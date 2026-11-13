@@ -50,6 +50,7 @@ class Config:
         self.TABLE_MATERIAL_DIM = "MaterialsDim"
         self.TABLE_VENDOR_DIM = "VendorDim"
         self.TABLE_CONTACT_DIM = "ContactDim"
+        self.TABLE_WORK_CENTER_DIM = "WorkCenterDim"
         self.TABLE_EWM_TASK_FACT = "EWMTaskFact"
         self.TABLE_EXTENDED_STOCK_FACT = "ExtendedStockFact"
         self.TABLE_EXTENDED_BATCH_STOCK_FACT = "ExtendedBatchStockFact"
@@ -86,7 +87,7 @@ class Config:
         self.TABLE_PURCH_AVG_PRICE_FACT = "PurchAvgPriceFact"
         self.TABLE_CUSTOMER_DM = "CustomerDMFact"
         self.TABLE_LAST_SALES_PRICE_FACT = "LastSalesPriceFact"
-        self.TABLE_NOTIFICATION_DEFECT_DIM = "NotificationDefectDim"
+        self.TABLE_NOTIFICATION_CATALOG_DIM = "NotificationCatalogDim"
         self.TABLE_FI_OPEN_ITEMS_FACT = "FinanceOpenItemsFact"
         self.TABLE_FORECAST_REQUIREMENTS_SOURCE_FACT = "ForecastRequirementsSourceFact"
         self.TABLE_FI_EXPENSES_ACCOUNT_BALANCE_FACT = (
@@ -99,6 +100,11 @@ class Config:
         self.DEFAULT_CHANNEL = "10"
         self.DEFAULT_DIVISION = "10"
         self.INTERCOMPANY_CHANNEL = "90"
+
+        # Quality Management Constants
+        self.QM_DEFECT_CATALOG = "9"
+        self.QM_CODIFICATION_CATALOG = "D"
+        self.QM_CAUSE_CATALOG = "5"
 
         # Economic Sales Type
         self.ECONOMIC_SALES_TYPE = "ZCRP"

@@ -22,7 +22,9 @@ class DimensionLookup:
     _subfamily_map: dict | None
     _material_status_map: dict | None
     _vendor_map: dict | None
-    _notification_defect_map: dict | None
+    _notification_catalog_map: dict | None
+    _notification_type_map: dict | None
+    _work_center_map: dict | None
 
     def __init__(self, con_dw: Engine):
         self._con_dw: Engine = con_dw
@@ -46,11 +48,16 @@ class DimensionLookup:
         self._vendor_map = None
         self._material_map = None
         self._production_area_map = None
-        self._notification_defect_map = None
+        self._notification_catalog_map = None
+        self._notification_type_map = None
+        self._work_center_map = None
 
     def _load_production_areas(self) -> pd.DataFrame:
         Logger().info("Cache --> Loading production areas from DB")
-        query = "SELECT PlantId, ProductionAreaCode, ProductionAreaId FROM ProductionAreaDim"
+        query = (
+            "SELECT PlantId, ProductionAreaCode, ProductionAreaId "
+            "FROM ProductionAreaDim"
+        )
         return pd.read_sql(query, self._con_dw)
 
     def _load_vendors(self) -> pd.DataFrame:
@@ -60,7 +67,10 @@ class DimensionLookup:
 
     def _load_customers(self) -> pd.DataFrame:
         Logger().info("Cache --> Loading customers from DB")
-        customer_query = """SELECT CustId, CustCode, SalesOrganization, Channel, Division FROM CustomerDim"""
+        customer_query = (
+            "SELECT CustId, CustCode, SalesOrganization, Channel, Division "
+            "FROM CustomerDim"
+        )
         return pd.read_sql(customer_query, self._con_dw)
 
     def _load_materials(self) -> pd.DataFrame:
@@ -119,7 +129,10 @@ class DimensionLookup:
 
     def _load_subfamilies(self) -> pd.DataFrame:
         Logger().info("Cache --> Loading subfamilies from DB")
-        subfamily_query = "SELECT GammaCode, DivisionCode, FamilyCode, SubFamilyCode, SubFamilyId FROM SUBFAMILYDIM"
+        subfamily_query = (
+            "SELECT GammaCode, DivisionCode, FamilyCode, SubFamilyCode, "
+            "SubFamilyId FROM SUBFAMILYDIM"
+        )
         return pd.read_sql(subfamily_query, self._con_dw)
 
     def _load_material_statuses(self) -> pd.DataFrame:
@@ -129,26 +142,64 @@ class DimensionLookup:
         )
         return pd.read_sql(status_query, self._con_dw)
 
-    def _load_notification_defects(self) -> pd.DataFrame:
-        Logger().info("Cache --> Loading notification defects from DB")
-        defect_query = "SELECT  GroupCode, Code, DefectId FROM NotificationDefectDim"
-        return pd.read_sql(defect_query, self._con_dw)
+    def _load_notification_catalogs(self) -> pd.DataFrame:
+        Logger().info("Cache --> Loading notification catalogs from DB")
+        catalog_query = (
+            "SELECT  Catalog, CodeGroup, Code, CodeId FROM NotificationCatalogDim "
+        )
+        return pd.read_sql(catalog_query, self._con_dw)
 
-    def get_notification_defect_map(self) -> dict:
-        if self._notification_defect_map is not None:
-            return self._notification_defect_map
+    def _load_notification_types(self) -> pd.DataFrame:
+        Logger().info("Cache --> Loading notification types from DB")
+        type_query = "SELECT TypeCode, TypeId FROM NotificationTypeDim"
+        return pd.read_sql(type_query, self._con_dw)
 
-        df_defects: pd.DataFrame = self._load_notification_defects()
+    def _load_work_centers(self) -> pd.DataFrame:
+        Logger().info("Cache --> Loading work centers from DB")
+        work_center_query = "SELECT Code, Id FROM WorkCenterDim"
+        return pd.read_sql(work_center_query, self._con_dw)
+
+    def get_work_center_map(self) -> dict:
+        if self._work_center_map is not None:
+            return self._work_center_map
+
+        df_work_centers: pd.DataFrame = self._load_work_centers()
 
         # Cache the map for reuse
-        self._notification_defect_map = dict(
+        self._work_center_map = dict(
+            zip(df_work_centers.Code.values, df_work_centers.Id.values)
+        )
+
+        return self._work_center_map
+
+    def get_notification_type_map(self) -> dict:
+        if self._notification_type_map is not None:
+            return self._notification_type_map
+
+        df_types: pd.DataFrame = self._load_notification_types()
+
+        # Cache the map for reuse
+        self._notification_type_map = dict(
+            zip(df_types.TypeCode.values, df_types.TypeId.values)
+        )
+
+        return self._notification_type_map
+
+    def get_notification_catalog_map(self) -> dict:
+        if self._notification_catalog_map is not None:
+            return self._notification_catalog_map
+
+        df_catalogs: pd.DataFrame = self._load_notification_catalogs()
+
+        # Cache the map for reuse
+        self._notification_catalog_map = dict(
             zip(
-                (df_defects.GroupCode + df_defects.Code).values,
-                df_defects.DefectId.values,
+                (df_catalogs.Catalog + df_catalogs.CodeGroup + df_catalogs.Code).values,
+                df_catalogs.CodeId.values,
             )
         )
 
-        return self._notification_defect_map
+        return self._notification_catalog_map
 
     def get_customer_map(self) -> dict:
         if self._customer_map is not None:

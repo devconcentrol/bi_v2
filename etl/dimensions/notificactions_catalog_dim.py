@@ -24,12 +24,13 @@ from utils.logger import Logger
 CRLF: str = "\r\n"
 
 
-class NotificationDefectDim:
+class NotificationCatalogDim:
     # Mapping from DataFrame columns (lowercase from SQL) to DB columns
     COLUMN_MAPPING = {
-        "GroupCode": "codegruppe",
+        "Catalog": "katalogart",
+        "CodeGroup": "codegruppe",
         "Code": "code",
-        "Description": "kurztext",
+        "CodeName": "kurztext",
     }
 
     def __init__(self, con_dw: Engine, con_sap: Engine, lookup: DimensionLookup):
@@ -41,26 +42,27 @@ class NotificationDefectDim:
     @error_handler
     def run(self):
         yesterday = (date.today() - timedelta(days=1)).strftime("%Y%m%d")
-        Logger().info(f"Processing defects for date: {yesterday}")
+        Logger().info(f"Processing catalogs for date: {yesterday}")
 
         stmt_update_etl = text(
-            f"UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() WHERE ETL = 'process_notification_defects'"
+            f"UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() "
+            "WHERE ETL = 'process_notification_catalogs'"
         )
 
-        sql_get_defects = """
-                            SELECT CODEGRUPPE, CODE, KURZTEXT
-                            FROM SAPSR3.ZCON_V_NOTIFICATIONS_DEFECT
-                            WHERE MODIFIEDDATE = :yesterday                            
+        sql_get_catalogs = """
+                            SELECT KATALOGART, CODEGRUPPE, CODE, KURZTEXT
+                            FROM SAPSR3.ZCON_V_NOTIFICATION_CATALOG
+                            --WHERE MODIFIEDDATE = :yesterday                            
                         """
         results: pd.DataFrame = pd.read_sql(
-            sql_get_defects,
+            sql_get_catalogs,
             self._con_sap,
             params={"yesterday": yesterday},
             dtype_backend="numpy_nullable",
         )
 
         if results.empty:
-            Logger().info("No defects found for processing")
+            Logger().info("No catalogs found for processing")
             # Always update ETL Info even if no data
             with self._con_dw.begin() as conn:
                 conn.execute(stmt_update_etl)
@@ -72,27 +74,30 @@ class NotificationDefectDim:
         metadata: MetaData = MetaData()
         # Define NotificationDefectDim Table
         defect_table: Table = Table(
-            self._config.TABLE_NOTIFICATION_DEFECT_DIM,
+            self._config.TABLE_NOTIFICATION_CATALOG_DIM,
             metadata,
-            Column("DefectId", Integer, primary_key=True, autoincrement=True),
-            Column("GroupCode", Integer, primary_key=True),
+            Column("CodeId", Integer, primary_key=True, autoincrement=True),
+            Column("Catalog", String(5)),
+            Column("CodeGroup", String(25)),
             Column("Code", String(25)),
-            Column("Description", String),
+            Column("CodeName", String),
         )
 
         # Prepare maps
-        defect_map = self._lookup.get_notification_defect_map()
+        defect_map = self._lookup.get_notification_catalog_map()
 
         # Lookups
-        results["search_key"] = results["codegruppe"] + results["code"]
-        results["DefectId"] = results["search_key"].map(defect_map)
+        results["search_key"] = (
+            results["katalogart"] + results["codegruppe"] + results["code"]
+        )
+        results["CodeId"] = results["search_key"].map(defect_map)
 
         # Transformation
         results["kurztext"] = results["kurztext"].str.replace(CRLF, "", regex=False)
 
         # Split into updates and inserts
-        updates_df = results[results["DefectId"].notna()]
-        inserts_df = results[results["DefectId"].isna()]
+        updates_df = results[results["CodeId"].notna()]
+        inserts_df = results[results["CodeId"].isna()]
 
         stmt_insert_defects: Insert = insert(defect_table)
 
@@ -104,7 +109,7 @@ class NotificationDefectDim:
         }
         stmt_update_defects: Update = (
             update(defect_table)
-            .where(defect_table.c.DefectId == bindparam("b_DefectId"))
+            .where(defect_table.c.CodeId == bindparam("b_CodeId"))
             .values(**update_values)
         )
 
@@ -117,7 +122,7 @@ class NotificationDefectDim:
                     for db_col, df_col in self.COLUMN_MAPPING.items()
                     if db_col not in ["codegruppe", "code"]
                 }
-                rename_dict["DefectId"] = "b_DefectId"  # Key for update
+                rename_dict["CodeId"] = "b_CodeId"  # Key for update
 
                 update_data = updates_df.rename(columns=rename_dict)[
                     list(rename_dict.values())
@@ -126,7 +131,7 @@ class NotificationDefectDim:
                 conn.execute(stmt_update_defects, update_data)  # type: ignore
 
             if not inserts_df.empty:
-                Logger().info(f"Inserting {len(inserts_df)} new defects")
+                Logger().info(f"Inserting {len(inserts_df)} new codes")
                 # Prepare insert data
                 # We simply map DataFrame columns to DB columns for insert
                 rename_dict_insert = {

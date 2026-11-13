@@ -66,13 +66,14 @@ class CustomerDim:
         Logger().info(f"Processing customers for date: {yesterday}")
 
         stmt_update_etl = text(
-            f"UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() WHERE ETL = 'process_customers'"
+            f"UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() "
+            "WHERE ETL = 'process_customers'"
         )
 
         sql_get_customers = """
-                            SELECT KUNNR, NAME, VKORG, VTWEG, SPART, LAND1, BZIRK, KDGRP, 
-                                   ZR, ZE, CRDAT, REGIO, HKUNNR, KTOKD, TAXNUM, PSTLZ, 
-                                   ORT01, KVGR2, ADDRESS, CHDAT, KONDA, LPRIO
+                            SELECT KUNNR, NAME, VKORG, VTWEG, SPART, LAND1, BZIRK,
+                                KDGRP, ZR, ZE, CRDAT, REGIO, HKUNNR, KTOKD, TAXNUM, 
+                                PSTLZ, ORT01, KVGR2, ADDRESS, CHDAT, KONDA, LPRIO
                             FROM SAPSR3.ZCON_V_CUSTOMER                            
                             WHERE CHDAT >= :yesterday                            
                         """
@@ -147,6 +148,16 @@ class CustomerDim:
             results["vkorg"] + results["vtweg"] + results["spart"] + results["kunnr"]
         )
         results["CustId"] = results["search_key"].map(customer_map)
+
+        results["fallback_key"] = (
+            results["vkorg"]
+            + self._config.INTERCOMPANY_CHANNEL
+            + results["spart"]
+            + results["kunnr"]
+        )
+        results["CustId"] = results["CustId"].fillna(
+            results["fallback_key"].map(customer_map)
+        )
 
         results["CustDivisionId"] = results["kvgr2"].map(division_map)
 
