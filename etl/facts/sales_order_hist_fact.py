@@ -67,7 +67,7 @@ class SalesOrderHistFactETL(BaseFactETL):
                    TRAZTD
             FROM SAPSR3.ZCON_V_SALES_ORDER_DELAY                                                   
             WHERE VKORG = 1000                             
-              --AND AEDAT = :yesterday
+              AND AEDAT = :yesterday
         """
         results: pd.DataFrame = pd.read_sql(
             sql_get_historic, con=self._con_sap, params={"yesterday": yesterday}
