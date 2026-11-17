@@ -46,6 +46,7 @@ from etl.facts.purchase_pending_orders_fact import PurchasePendingOrdersFactETL
 from etl.facts.qm_adjustment_fact import QMAdjustmentFactETL
 from etl.facts.qm_inspection_lot_fact import QMInspectionLotFactETL
 from etl.facts.qm_notification_fact import QMNotificationFactETL
+from etl.facts.qm_notification_measure_fact import QMNotificationMeasureFactETL
 from etl.facts.qm_sample_fact import QMSampleFactETL
 from etl.facts.recovery_products_fact import RecoveryProductsFactETL
 from etl.facts.regularization_fact import RegularizationFactETL
@@ -159,6 +160,9 @@ def _build_job_factories(context: RuntimeContext) -> dict[str, Callable[[], None
             context.con_dw, context.con_sap, context.lookup
         ).run,
         "qm_notification_fact": QMNotificationFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
+        "qm_notification_measures_fact": QMNotificationMeasureFactETL(
             context.con_dw, context.con_sap, context.lookup
         ).run,
         "qm_sample_fact": QMSampleFactETL(

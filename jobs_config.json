@@ -200,6 +200,14 @@
       "frequency": "daily"
     },
     {
+      "name": "qm_notification_measures_fact",
+      "enabled": false,
+      "times": [
+        "03:35"
+      ],
+      "frequency": "daily"
+    },
+    {
       "name": "qm_sample_fact",
       "enabled": true,
       "times": [

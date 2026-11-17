@@ -59,6 +59,7 @@ class Config:
         self.TABLE_QM_ADJUSTMENT_FACT = "QMAdjustmentFact"
         self.TABLE_QM_INSPECTION_LOT_FACT = "QMInspectionLot"
         self.TABLE_QM_NOTIFICATION_FACT = "QMNotificationFact"
+        self.TABLE_NOTIFICATION_MEASURE_FACT = "QMNotificationMeasureFact"
         self.TABLE_QM_SAMPLE_ANALYSIS_FACT = "QMSampleAnalysisFact"
         self.TABLE_CUSTOMER_PRICE_FACT = "CustomerPriceFact"
         self.TABLE_PLANNED_ORDERS_QTY_FACT = "ProcessOrderQtyFact"
