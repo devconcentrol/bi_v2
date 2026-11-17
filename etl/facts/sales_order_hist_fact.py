@@ -1,5 +1,6 @@
 import pandas as pd
 from sqlalchemy import (
+    DECIMAL,
     REAL,
     Column,
     Date,
@@ -33,6 +34,8 @@ class SalesOrderHistFactETL(BaseFactETL):
         "conf_qty": "QtyConfirmed",
         "meins": "UnitId",
         "lprio": "DeliveryPriority",
+        "route": "Route",
+        "traztd": "TransitDays",
     }
 
     @error_handler
@@ -59,10 +62,12 @@ class SalesOrderHistFactETL(BaseFactETL):
                    VKORG,
                    VTWEG,
                    SPART,
-                   LPRIO
+                   LPRIO,
+                   ROUTE,
+                   TRAZTD
             FROM SAPSR3.ZCON_V_SALES_ORDER_DELAY                                                   
             WHERE VKORG = 1000                             
-              AND AEDAT = :yesterday
+              --AND AEDAT = :yesterday
         """
         results: pd.DataFrame = pd.read_sql(
             sql_get_historic, con=self._con_sap, params={"yesterday": yesterday}
@@ -139,6 +144,7 @@ class SalesOrderHistFactETL(BaseFactETL):
 
         results["CustId"] = results["CustId"].astype("Int64")
         results["MaterialId"] = results["MaterialId"].astype("Int64")
+        results["traztd"] = results["traztd"].fillna(0)
 
         # Rename columns to map to DB
         results = results.rename(columns=self.COLUMN_MAPPING)
@@ -164,6 +170,8 @@ class SalesOrderHistFactETL(BaseFactETL):
             Column("QtyConfirmed", REAL),
             Column("UnitId", String(10)),
             Column("DeliveryPriority", String(5)),
+            Column("Route", String(15)),
+            Column("TransitDays", DECIMAL(15, 4)),
         )
 
         # Merge with existing orders to find which ones to delete
