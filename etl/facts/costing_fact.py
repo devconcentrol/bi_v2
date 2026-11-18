@@ -106,6 +106,7 @@ class CostingFactETL:
                     "Transport",
                     "Commission",
                     "InvoiceDiscount",
+                    "ConRate",
                 ],
             )
 
@@ -116,13 +117,15 @@ class CostingFactETL:
             missing_customers = df[df["CustId"].isna()]["CustomerCode"].unique()
             if len(missing_customers) > 0:
                 Logger().warning(
-                    f"Missing customer IDs in {os.path.basename(file_path)}: {missing_customers}"
+                    f"Missing customer IDs in {os.path.basename(file_path)}: "
+                    f"{missing_customers}"
                 )
 
             missing_materials = df[df["MaterialId"].isna()]["MaterialCode"].unique()
             if len(missing_materials) > 0:
                 Logger().warning(
-                    f"Missing material IDs in {os.path.basename(file_path)}: {missing_materials}"
+                    f"Missing material IDs in {os.path.basename(file_path)}: "
+                    f"{missing_materials}"
                 )
 
             # Select and order columns
@@ -138,6 +141,7 @@ class CostingFactETL:
                 "Transport",
                 "Commission",
                 "InvoiceDiscount",
+                "ConRate",
             ]
             df_upload = df[final_cols].copy()
 
@@ -161,7 +165,8 @@ class CostingFactETL:
 
         # Update ETLInfo
         stmt_update_etl = text(
-            f"UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() WHERE ETL = 'process_costing'"
+            f"UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() "
+            "WHERE ETL = 'process_costing'"
         )
         with self._engine.begin() as conn:
             conn.execute(stmt_update_etl)

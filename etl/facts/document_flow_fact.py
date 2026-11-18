@@ -92,7 +92,8 @@ class DocumentFlowFactETL(BaseFactETL):
 
         # 3. Handle Deletion in Data Warehouse
         stmt_delete = text(
-            f"DELETE FROM {self._config.TABLE_DOCUMENT_FLOW_FACT} WHERE CreatedDate >= :cutoff_dw"
+            f"DELETE FROM {self._config.TABLE_DOCUMENT_FLOW_FACT} "
+            "WHERE CreatedDate >= :cutoff_dw"
         )
 
         if results.empty:

@@ -46,7 +46,7 @@
     },
     {
       "name": "work_center_dim",
-      "enabled": false,
+      "enabled": true,
       "times": [
         "01:25"
       ],
@@ -201,7 +201,7 @@
     },
     {
       "name": "qm_notification_measures_fact",
-      "enabled": false,
+      "enabled": true,
       "times": [
         "03:35"
       ],
