@@ -30,6 +30,19 @@ class CostingFactETL:
     ) -> pd.DataFrame:
         df = df.copy()
 
+        NUMERIC_COLUMNS = [
+            "NetWeight",
+            "TotalIncome",
+            "TotalCOGS",
+            "Transport",
+            "Commission",
+            "InvoiceDiscount",
+            "ConRate",
+        ]
+
+        for column in NUMERIC_COLUMNS:
+            df[column] = pd.to_numeric(df[column], errors="coerce").fillna(0)
+
         df["CostingDate"] = pd.to_datetime(
             df["CostingDate"], format="%Y%m%d", errors="coerce"
         ).dt.date
@@ -145,16 +158,23 @@ class CostingFactETL:
             ]
             df_upload = df[final_cols].copy()
 
+            # Prepare SQL statement to update ETL info
+            stmt_update_etl = text(
+                f"UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() "
+                "WHERE ETL = 'process_costing'"
+            )
             # 3. Upload to SQL Server
             Logger().info(
                 f"Uploading {len(df_upload)} rows from {os.path.basename(file_path)}..."
             )
-            df_upload.to_sql(
-                self._config.TABLE_COSTING_FACT,
-                self._engine,
-                if_exists="append",
-                index=False,
-            )
+            with self._engine.begin() as conn:
+                df_upload.to_sql(
+                    self._config.TABLE_COSTING_FACT,
+                    conn,
+                    if_exists="append",
+                    index=False,
+                )
+                conn.execute(stmt_update_etl)
 
             # 4. Move to loaded
             dest_path = os.path.join(loaded_dir, os.path.basename(file_path))
@@ -162,11 +182,3 @@ class CostingFactETL:
                 os.remove(dest_path)
             shutil.move(file_path, dest_path)
             Logger().info(f"Processed and moved: {os.path.basename(file_path)}")
-
-        # Update ETLInfo
-        stmt_update_etl = text(
-            f"UPDATE {self._config.TABLE_ETL_INFO} SET ProcessDate = GETDATE() "
-            "WHERE ETL = 'process_costing'"
-        )
-        with self._engine.begin() as conn:
-            conn.execute(stmt_update_etl)
