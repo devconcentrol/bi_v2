@@ -16,6 +16,7 @@ from etl.dimensions.notificactions_catalog_dim import NotificationCatalogDim
 from etl.dimensions.vendor_dim import VendorDim
 from etl.dimensions.work_center_dim import WorkCenterDim
 from etl.facts.availability_calculation_fact import AvailabilityCalculationFactETL
+from etl.facts.calculate_real_margin_fact import CalculateRealMarginFactETL
 from etl.facts.consumption_ceco_fact import ConsumptionCeCoFactETL
 from etl.facts.consumption_fact import ConsumptionFactETL
 from etl.facts.costing_fact import CostingFactETL
@@ -61,7 +62,7 @@ from utils.config import Config
 from utils.dimension_lookup import DimensionLookup
 from utils.job_runner import safe_run_job
 from utils.logger import Logger
-from utils.message_sender import EmailSender, WhatsAppSender
+from utils.message_sender import EmailSender
 from utils.new_sale_checker import NewSaleChecker
 from utils.result_sender import ProcessExecutionNotifier
 
@@ -91,11 +92,20 @@ class JobConfigEntry:
 
 def _build_job_factories(context: RuntimeContext) -> dict[str, Callable[[], None]]:
     config = Config.get_instance()
-    whatsapp_sender = WhatsAppSender(
-        api_url=config.API_URL,
-        api_key=config.API_KEY,
+    # whatsapp_sender = WhatsAppSender(
+    #     api_url=config.API_URL,
+    #     api_key=config.API_KEY,
+    # )
+
+    process_status_mailer = EmailSender(
+        smtp_host=config.SMTP_HOST,
+        sender=config.EMAIL_SENDER,
+        recipients="dmartin@concentrol.com",
+        subject="Process Status",
+        username=config.SMTP_USERNAME,
+        password=config.SMTP_PASSWORD,
     )
-    email_sender = EmailSender(
+    sales_outside_forecast_mailer = EmailSender(
         smtp_host=config.SMTP_HOST,
         sender=config.EMAIL_SENDER,
         recipients=config.EMAIL_RECIPIENTS,
@@ -192,6 +202,9 @@ def _build_job_factories(context: RuntimeContext) -> dict[str, Callable[[], None
         "material_real_price_fact": MaterialRealPriceFactETL(
             context.con_dw, context.con_sap, context.lookup
         ).run,
+        "calculate_real_margin_fact": CalculateRealMarginFactETL(
+            context.con_dw, context.con_sap, context.lookup
+        ).run,
         "regularization_fact": RegularizationFactETL(
             context.con_dw, context.con_sap, context.lookup
         ).run,
@@ -229,7 +242,7 @@ def _build_job_factories(context: RuntimeContext) -> dict[str, Callable[[], None
             context.con_dw, context.con_sap, context.lookup
         ).run,
         "result_sender": ProcessExecutionNotifier(
-            context.con_dw, whatsapp_sender
+            context.con_dw, process_status_mailer
         ).send_result,
         "forecast_requirements_source_fact": ForecastRequirementsSourceETL(
             context.con_dw, context.con_sap, context.lookup
@@ -238,7 +251,10 @@ def _build_job_factories(context: RuntimeContext) -> dict[str, Callable[[], None
             context.con_dw, context.con_sap, context.lookup
         ).run,
         "new_sale_checker": NewSaleChecker(
-            context.con_dw, context.con_sap, context.lookup, email_sender
+            context.con_dw,
+            context.con_sap,
+            context.lookup,
+            sales_outside_forecast_mailer,
         ).run,
     }
 

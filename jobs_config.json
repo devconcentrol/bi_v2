@@ -282,6 +282,14 @@
       "frequency": "daily"
     },
     {
+      "name": "calculate_real_margin_fact",
+      "enabled": true,
+      "times": [
+        "04:50"
+      ],
+      "frequency": "daily"
+    },
+    {
       "name": "regularization_fact",
       "enabled": true,
       "times": [

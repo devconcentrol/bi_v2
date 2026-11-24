@@ -225,7 +225,7 @@ class CustomerDim:
                 rename_dict = {
                     df_col: f"b_{db_col}"
                     for db_col, df_col in self.COLUMN_MAPPING.items()
-                    if db_col not in ["CustCode", "CreatedDate"]
+                    if db_col not in ["CustCode", "CreatedDate", "Channel", "Division"]
                 }
                 rename_dict["CustId"] = "b_CustId"  # Key for update
 

@@ -1,16 +1,5 @@
 import pandas as pd
-from sqlalchemy import (
-    DECIMAL,
-    Column,
-    Date,
-    Insert,
-    Integer,
-    MetaData,
-    String,
-    Table,
-    insert,
-    text,
-)
+from sqlalchemy import text
 
 from etl.base_fact_etl import BaseFactETL
 from utils.error_handler import error_handler
@@ -27,6 +16,7 @@ class MaterialRealPriceFactETL(BaseFactETL):
         "pvprs": "RealPrice",
         "peinh": "PriceQuantity",
         "period": "PriceDate",
+        "CanCalculate": "CanCalculate",
     }
 
     @error_handler
@@ -45,9 +35,10 @@ class MaterialRealPriceFactETL(BaseFactETL):
                                 curtp,
                                 pvprs,
                                 peinh,
-                                period
+                                period,
+                                xclose
                             FROM SAPSR3.ZCON_V_MATERIAL_REAL_PRICE
-                            WHERE period >= :cutoff_date_sap
+                            WHERE period >= :cutoff_date_sap                            
                         """
 
         results: pd.DataFrame = pd.read_sql(
@@ -55,6 +46,13 @@ class MaterialRealPriceFactETL(BaseFactETL):
             con=self._con_sap,
             params={"cutoff_date_sap": cutoff_date_sap},
         )
+
+        # Logger().info(
+        #     "SAP returned %d material real price rows since %s:\n%s",
+        #     len(results),
+        #     cutoff_date_sap,
+        #     results.to_string(index=False),
+        # )
 
         if results.empty:
             Logger().info("No material real price data found in SAP.")
@@ -75,6 +73,7 @@ class MaterialRealPriceFactETL(BaseFactETL):
         material_map = self._lookup.get_material_map()
         results["matnr"] = results["matnr"].fillna("").astype(str)
         results["MaterialId"] = results["matnr"].map(material_map)
+        results["CanCalculate"] = results["xclose"].astype(str).eq("X").fillna(False)
 
         # Filter out missing materials (was printed in loop before)
         missing_materials = results[results["MaterialId"].isna()]
@@ -90,43 +89,92 @@ class MaterialRealPriceFactETL(BaseFactETL):
             results["period"], format="%Y%m%d", errors="coerce"
         ).dt.date
 
-        metadata = MetaData()
-        material_real_price_table = Table(
-            self._config.TABLE_MATERIAL_REAL_PRICE_FACT,
-            metadata,
-            Column("PlantId", Integer),
-            Column("MaterialId", Integer),
-            Column("CurrencyType", String(10)),
-            Column("RealPrice", DECIMAL(15, 4)),
-            Column("PriceQuantity", DECIMAL(15, 4)),
-            Column("PriceDate", Date),
+        table_name = self._config.TABLE_MATERIAL_REAL_PRICE_FACT
+        columns = list(self.COLUMN_MAPPING.values())
+        key_columns = ["PlantId", "MaterialId", "CurrencyType", "PriceDate"]
+        records = (
+            results.rename(columns=self.COLUMN_MAPPING)[columns]
+            .drop_duplicates(subset=key_columns, keep="last")
+            .astype(object)
+        )
+        rows = list(
+            records.where(records.notna(), None).itertuples(index=False, name=None)
         )
 
-        # Rename and Select Columns
-        results = results.rename(columns=self.COLUMN_MAPPING)
-        final_cols = list(self.COLUMN_MAPPING.values())
-
-        insert_records = (
-            results[final_cols]
-            .where(pd.notnull(results), None)
-            .to_dict(orient="records")
+        column_list = ", ".join(columns)
+        key_list = ", ".join(key_columns)
+        source_columns = ", ".join(f"source.{column}" for column in columns)
+        match_key = " AND ".join(
+            f"target.{column} = source.{column}" for column in key_columns
         )
 
-        # Delete x months back
-        stmt_delete = text(f"""
-                           DELETE FROM {self._config.TABLE_MATERIAL_REAL_PRICE_FACT}
-                           WHERE PriceDate >= :cutoff_date
-                           """)
-
-        # Insert new records
-        stmt_insert: Insert = insert(material_real_price_table)
         with self._con_dw.begin() as conn:
-            conn.execute(stmt_delete, {"cutoff_date": cutoff_date.strftime("%Y-%m-%d")})
-            if len(insert_records) > 0:
-                Logger().info(
-                    f"Inserting {len(insert_records)} records into Material Real Price Fact."
-                )
-                conn.execute(stmt_insert, insert_records)
-            self._update_etl_info(conn, "process_material_real_price")
+            if rows:
+                Logger().info(f"Staging {len(rows)} material real prices.")
+                conn.execute(text(f"""
+                    SELECT TOP (0) {column_list}
+                    INTO #MaterialRealPriceStage
+                    FROM {table_name}
+                    """))
 
+                # Seven parameters per row, below SQL Server's 2,100 limit.
+                batch_size = 250
+                for offset in range(0, len(rows), batch_size):
+                    batch = rows[offset : offset + batch_size]
+                    parameters = {
+                        f"p{row_index}_{column_index}": value
+                        for row_index, row in enumerate(batch)
+                        for column_index, value in enumerate(row)
+                    }
+                    values = ", ".join(
+                        "("
+                        + ", ".join(
+                            f":p{row_index}_{column_index}"
+                            for column_index in range(len(columns))
+                        )
+                        + ")"
+                        for row_index in range(len(batch))
+                    )
+                    conn.execute(
+                        text(f"""
+                            INSERT INTO #MaterialRealPriceStage ({column_list})
+                            VALUES {values}
+                            """),
+                        parameters,
+                    )
+
+                conn.execute(text(f"""
+                    CREATE UNIQUE CLUSTERED INDEX IX_MaterialRealPriceStage
+                    ON #MaterialRealPriceStage ({key_list})
+                    """))
+                Logger().info("Applying staged material real prices.")
+                conn.execute(text(f"""
+                    UPDATE target
+                    SET RealPrice = source.RealPrice,
+                        PriceQuantity = source.PriceQuantity,
+                        CanCalculate = source.CanCalculate
+                    FROM {table_name} AS target WITH (UPDLOCK, HOLDLOCK)
+                    JOIN #MaterialRealPriceStage AS source ON {match_key}
+                    WHERE target.CalculatedDate IS NULL
+                      AND EXISTS (
+                          SELECT source.RealPrice, source.PriceQuantity,
+                                 source.CanCalculate
+                          EXCEPT
+                          SELECT target.RealPrice, target.PriceQuantity,
+                                 target.CanCalculate
+                      )
+                    """))
+                conn.execute(text(f"""
+                    INSERT INTO {table_name} ({column_list})
+                    SELECT {source_columns}
+                    FROM #MaterialRealPriceStage AS source
+                    WHERE NOT EXISTS (
+                        SELECT 1
+                        FROM {table_name} AS target WITH (UPDLOCK, HOLDLOCK)
+                        WHERE {match_key}
+                    )
+                    """))
+                conn.execute(text("DROP TABLE #MaterialRealPriceStage"))
+
+            self._update_etl_info(conn, "process_material_real_price")
             Logger().info("Material Real Price ETL completed successfully.")
