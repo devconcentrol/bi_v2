@@ -210,7 +210,7 @@ class CustomerDim:
         update_values = {
             db_col: bindparam(f"b_{db_col}")
             for db_col in self.COLUMN_MAPPING.keys()
-            if db_col not in ["CustCode", "CreatedDate"]
+            if db_col not in ["CustCode", "CreatedDate", "Channel", "Division"]
         }
         stmt_update_customers: Update = (
             update(customer_table)
